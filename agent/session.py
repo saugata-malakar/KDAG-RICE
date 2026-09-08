@@ -74,12 +74,15 @@ def wire_fence_to_session(
             return
         gen_id = fence.current_generation_id
         turn = state.ingest_livekit_item(item, generation_id=gen_id)
-        # Ground LiveKit chat context to heard-text prefix if interrupted
-        if turn.truncated and hasattr(item, "text_content"):
+        # Ground LiveKit chat context to heard-text prefix if interrupted.
+        # ChatMessage.content is a mutable list[ChatContent] (strings/images),
+        # whereas .text_content is a read-only property without a setter.
+        # Setting item.content = [turn.text] correctly updates the message in session.history.
+        if turn.truncated and hasattr(item, "content"):
             try:
-                item.text_content = turn.text
-            except Exception:
-                pass
+                item.content = [turn.text]
+            except Exception as e:
+                logger.warning(f"Failed to update item.content: {e}")
         event_log.emit(
             "conversation_item_ingested",
             generation_id=gen_id,

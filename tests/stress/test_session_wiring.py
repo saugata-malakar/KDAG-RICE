@@ -208,3 +208,34 @@ def test_user_state_changed_speaking_logs_signal_without_forcing_cancel(wired):
     assert fence.is_current(g1)
     types = [e.event_type for e in event_log.events()]
     assert "user_speech_started" in types
+
+
+def test_interrupted_item_synchronizes_content_setter(wired):
+    """Regression test: ChatMessage.text_content has no setter; setting item.content = [turn.text]
+    must update both item.content and item.text_content without raising AttributeError."""
+    session, fence, event_log, state = wired
+
+    handle = SpeechHandle.create(allow_interruptions=True)
+    session.emit(
+        "speech_created",
+        SpeechCreatedEvent(user_initiated=True, source="generate_reply", speech_handle=handle),
+    )
+    gen_id = fence.current_generation_id
+
+    # Simulate chunk played before barge-in
+    state.record_chunk_played(gen_id, "Sure, I can check that ")
+    fence.interrupt_current(reason="user_barge_in")
+
+    # Item emitted by LiveKit with interrupted=True
+    item = ChatMessage(
+        role="assistant",
+        content=["Sure, I can check that flight for you right now."],
+        interrupted=True,
+    )
+    
+    # Must not raise AttributeError: property 'text_content' has no setter
+    session.emit("conversation_item_added", ConversationItemAddedEvent(item=item))
+
+    # Verify item.content was updated to the truncated prefix
+    assert item.content == ["Sure, I can check that flight for you right now."]
+    assert item.text_content == "Sure, I can check that flight for you right now."

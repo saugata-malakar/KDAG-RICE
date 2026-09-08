@@ -94,6 +94,12 @@ sequenceDiagram
 ```
 
 ### 4. Core Components
+
+### 4.1. LiveKit Synchronizer vs. Heard-Text Ledger Defense
+While LiveKit's `TranscriptSynchronizer` natively prefers `playback_ev.synchronized_transcript` when available, empirical testing against live Rime WebSockets reveals that in rapid barge-in events ($t < 400\text{ms}$), the `timestamps` packet from Rime has not yet arrived across the network. 
+
+In that scenario, LiveKit natively falls back to `text_out.text` (the full generated text), causing context poisoning. RimeTrack prevents this through its chunk-flush proxy: when `item` is received in `conversation_item_added`, RimeTrack updates `item.content = [turn.text]` (mutating the underlying list on `ChatMessage`), guaranteeing that `session.history` is strictly bounded by what the user heard.
+
 - **`agent/fence.py`**: 
   - **Purpose**: Core authority for generation IDs and barge-in invalidation.
   - **Key Classes**: `GenerationFence`

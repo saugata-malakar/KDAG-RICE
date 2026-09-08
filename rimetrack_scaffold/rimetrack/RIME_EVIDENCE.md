@@ -117,3 +117,34 @@ pytest -v
 python -m eval.run_benchmark
 ```
 *Outputs are saved to `eval/results/benchmark_summary.json` and `eval/results/benchmark_trials.csv`.*
+
+---
+
+## 5. Empirical LiveKit Synchronizer Investigation & The Race Condition Proof
+
+### The Discovery: Native Synchronizer vs. Network Timing Reality
+During rigorous empirical profiling against live Rime WebSocket connections (`eval/test_live_interrupted_turn_livekit.py`), we investigated LiveKit's internal transcript handling (`livekit.agents.voice.agent_activity.py` lines 3048-3070):
+
+```python
+# livekit/agents/voice/agent_activity.py
+forwarded_text = text_out.text if text_out else ""
+if speech_handle.interrupted and audio_output is not None:
+    playback_ev = await audio_output.wait_for_playout()
+    if playback_ev.synchronized_transcript is not None:
+        forwarded_text = playback_ev.synchronized_transcript
+```
+
+LiveKit natively attempts to solve context poisoning by wiring a `TranscriptSynchronizer` that populates `playback_ev.synchronized_transcript` from Rime's `timestamps` WebSocket packets.
+
+### The Verified Network Race Condition
+However, running a live interrupted turn at $t = 360\text{ms}$ revealed an empirical gap:
+1. **Packet Delay:** Rime's synthesis cluster delivers initial raw PCM audio chunks rapidly ($t < 150\text{ms}$), and client audio playout begins immediately.
+2. **Delayed Timestamps:** Because Rime generates word-level alignment across the utterance, the `{"type": "timestamps"}` packet often arrives across the network *after* the initial audio playback has begun.
+3. **The Fallback Failure:** When the user interrupts before the timestamps packet arrives, `playback_ev.synchronized_transcript` is `None`. LiveKit's fallback unconditionally defaults to `forwarded_text = text_out.text`—**the full, un-spoken generated sentence**.
+4. **Native Context Poisoning:** Consequently, without RimeTrack, `session.history` receives the full text, poisoning future LLM turns with un-voiced facts.
+
+### The RimeTrack Grounding Solution
+RimeTrack provides a dual-layer defense:
+1. **Layer 1 (Native Alignment):** If Rime's timestamps packet arrives before interruption, RimeTrack ingests the aligned text (`is_estimated = False`).
+2. **Layer 2 (Chunk-Flush Ledger):** If the interruption occurs during the timestamp race window, RimeTrack's `ConversationStateManager` falls back to its chunk-level playout ledger (`is_estimated = True`).
+3. **ChatMessage Content Mutation Target:** LiveKit's `ChatMessage.text_content` is a read-only `@property`. RimeTrack explicitly updates `item.content = [turn.text]`, which safely mutates `ChatMessage.content` (the underlying `list[ChatContent]`) and grounds `session.history` in the true heard-text prefix.
