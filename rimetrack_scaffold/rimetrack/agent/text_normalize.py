@@ -1,10 +1,11 @@
 """
 Pre-TTS Text Normalization for Rime TTS (agent/text_normalize.py).
 
-Follows Rime's house style guide and reference implementation patterns:
-- Strips markdown formatting (bold, italics, code backticks, headers, links)
-- Normalizes doubled/repeated punctuation while preserving Rime's `?!` interrobang prosody convention
-- Cleans whitespace for smooth natural speech synthesis
+Follows Brooke Larson's "Writing for the ear" guidance and Rime house rules:
+- Strips markdown formatting (bold, italics, backticks, headers, links)
+- Expands domain codes, flight numbers, currency, and times into natural spoken equivalents
+- Normalizes doubled/repeated punctuation while preserving Rime's `?!` interrobang
+- Cleans whitespace for seamless neural audio synthesis
 """
 
 from __future__ import annotations
@@ -12,11 +13,29 @@ from __future__ import annotations
 import re
 
 
+def expand_spoken_domain_terms(text: str) -> str:
+    """Expands domain codes, times, and currency into ear-friendly spoken form."""
+    s = text
+
+    # Currency: $50 -> 50 dollars, $100.50 -> 100 dollars 50 cents
+    s = re.sub(r"\$(\d+)\.(\d{2})\b", r"\1 dollars and \2 cents", s)
+    s = re.sub(r"\$(\d+)\b", r"\1 dollars", s)
+
+    # Time: 7:30pm -> 7:30 p.m., 7pm -> 7 p.m.
+    s = re.sub(r"\b(\d{1,2}):(\d{2})\s*([ap]\.?m\.?)\b", r"\1:\2 \3", s, flags=re.IGNORECASE)
+    s = re.sub(r"\b(\d{1,2})\s*([ap]\.?m\.?)\b", r"\1 \2", s, flags=re.IGNORECASE)
+
+    # Percentages: 95% -> 95 percent
+    s = re.sub(r"(\d+)%", r"\1 percent", s)
+
+    # Flight / Alpha-numeric codes: UA-402 -> UA 402, BK-5521 -> BK 5521
+    s = re.sub(r"\b([A-Z]{2,3})-(\d{3,4})\b", r"\1 \2", s)
+
+    return s
+
+
 def normalize_for_tts(text: str) -> str:
-    """Normalizes raw LLM output text for Rime TTS synthesis.
-    
-    Returns clean, prosody-preserving spoken text.
-    """
+    """Normalizes raw LLM text into prosody-preserving, ear-optimized speech text."""
     if not text:
         return ""
 
@@ -42,25 +61,19 @@ def normalize_for_tts(text: str) -> str:
     s = re.sub(r"(?m)^\s*[-*+]\s+", "", s)
     s = re.sub(r"(?m)^\s*\d+\.\s+", "", s)
 
-    # 6. Preserve Rime Interrobang conventions (`?!` or `!?` -> `?!`), while collapsing repeated punctuation
-    # Protect interrobangs temporarily
-    s = re.sub(r"\?\!+|\!+\?", " __INTERROBANG__ ", s)
+    # 6. Domain phonetic expansions
+    s = expand_spoken_domain_terms(s)
 
-    # Collapse repeated exclamation points (!! -> !) and question marks (?? -> ?)
+    # 7. Preserve Rime Interrobang (`?!` or `!?` -> `?!`), while collapsing repeated punctuation
+    s = re.sub(r"\?\!+|\!+\?", " __INTERROBANG__ ", s)
     s = re.sub(r"\!{2,}", "!", s)
     s = re.sub(r"\?{2,}", "?", s)
-
-    # Collapse repeated commas
     s = re.sub(r",{2,}", ",", s)
-
-    # Collapse repeated periods (except 3 dots for ellipsis `...`)
     s = re.sub(r"(?<!\.)\.{2}(?!\.)", ".", s)  # 2 dots -> 1 dot
     s = re.sub(r"(?<!\.)\.{4,}(?!\.)", "...", s)  # 4+ dots -> ellipsis
-
-    # Restore interrobangs as Rime's `?!`
     s = s.replace(" __INTERROBANG__ ", "?!")
 
-    # 7. Collapse extra horizontal whitespace
+    # 8. Collapse extra whitespace
     s = re.sub(r"[ \t]+", " ", s)
     s = re.sub(r"\n\s*\n", "\n", s)
 

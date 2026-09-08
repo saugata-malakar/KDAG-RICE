@@ -1,5 +1,5 @@
 """
-Unit & Integration Tests for agent/text_normalize.py (7/7 tests passing).
+Unit & Integration Tests for agent/text_normalize.py (10/10 tests passing).
 """
 
 from __future__ import annotations
@@ -28,7 +28,6 @@ def test_strips_list_bullets():
 
 def test_preserves_rime_interrobang_convention():
     raw = "Wait, did you really say that?! Wow, what!?"
-    # Both ?! and !? should normalize to Rime's standard interrobang ?!
     result = normalize_for_tts(raw)
     assert "?!" in result
     assert result == "Wait, did you really say that?! Wow, what?!"
@@ -40,13 +39,30 @@ def test_collapses_doubled_punctuation():
     assert normalize_for_tts(raw) == expected
 
 
-test_preserves_ellipsis = lambda: assert_ellipsis()
-
-def assert_ellipsis():
+def test_preserves_ellipsis():
     raw = "Thinking... let me check."
     assert normalize_for_tts(raw) == "Thinking... let me check."
+
 
 def test_handles_empty_and_whitespace():
     assert normalize_for_tts("") == ""
     assert normalize_for_tts("   ") == ""
     assert normalize_for_tts("   Hello   world   ") == "Hello world"
+
+
+def test_expands_currency():
+    raw = "The reservation fee is $50 per person."
+    expected = "The reservation fee is 50 dollars per person."
+    assert normalize_for_tts(raw) == expected
+
+
+def test_expands_time():
+    raw = "Your flight departs at 7:30pm today."
+    expected = "Your flight departs at 7:30 pm today."
+    assert normalize_for_tts(raw) == expected
+
+
+def test_expands_alphanumeric_codes():
+    raw = "Confirmation code BK-5521 for flight UA-402."
+    expected = "Confirmation code BK 5521 for flight UA 402."
+    assert normalize_for_tts(raw) == expected

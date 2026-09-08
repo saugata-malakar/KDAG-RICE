@@ -119,6 +119,12 @@ class GenerationFence:
     def add_listener(self, fn: Callable[[FenceEvent], None]) -> None:
         self._listeners.append(fn)
 
+    def remove_listener(self, fn: Callable[[FenceEvent], None]) -> None:
+        try:
+            self._listeners.remove(fn)
+        except ValueError:
+            pass
+
     def _notify(self, event: FenceEvent) -> None:
         for fn in self._listeners:
             try:

@@ -1,8 +1,8 @@
 """
 RimeTrack agent worker entrypoint.
 
-Implements full-duplex voice with Rime over WebSocket, with GenerationFence
-and ToolExecutor wired to LiveKit's native session events.
+Implements full-duplex voice with Rime over WebSocket, with GenerationFence,
+Heard-Text Ledger, and ToolExecutor wired to LiveKit's native session events.
 """
 
 from __future__ import annotations
@@ -74,6 +74,12 @@ def wire_fence_to_session(
             return
         gen_id = fence.current_generation_id
         turn = state.ingest_livekit_item(item, generation_id=gen_id)
+        # Ground LiveKit chat context to heard-text prefix if interrupted
+        if turn.truncated and hasattr(item, "text_content"):
+            try:
+                item.text_content = turn.text
+            except Exception:
+                pass
         event_log.emit(
             "conversation_item_ingested",
             generation_id=gen_id,
@@ -112,7 +118,7 @@ async def entrypoint(ctx: JobContext) -> None:
     tool_executor = ToolExecutor(fence, event_log)
     tools = build_agent_tools(tool_executor, fence)
 
-    # Fallback to openai.STT if DEEPGRAM_API_KEY is not configured
+    # Resilient STT fallback: Deepgram nova-3 -> OpenAI Whisper
     dg_key = os.environ.get("DEEPGRAM_API_KEY", "")
     if dg_key and dg_key != "your_deepgram_api_key":
         stt_plugin = deepgram.STT(model="nova-3")
