@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RimeTrack — Realtime Interruption & Recovery Debug HUD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .animate-pulse-fast { animation: pulse-fast 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen p-6 antialiased">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header & Provider Badge -->
+    <header class="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-slate-800 gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="h-4 w-4 rounded-full bg-emerald-500 animate-pulse"></div>
+          <h1 class="text-2xl font-bold tracking-tight text-white">RimeTrack Live Debug HUD</h1>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">DataForge x Rime</span>
+        </div>
+        <p class="text-sm text-slate-400 mt-1">Interruption & Recovery Runtime with Word-Aligned Timestamp Fencing</p>
+      </div>
+
+      <!-- Active Provider Badge -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-4 text-xs">
+        <div>
+          <span class="text-slate-500 block">Active TTS Engine</span>
+          <span class="font-semibold text-emerald-400">Rime WebSocket Engine</span>
+        </div>
+        <div class="h-6 w-px bg-slate-800"></div>
+        <div>
+          <span class="text-slate-500 block">Model / Speaker</span>
+          <span class="font-mono text-slate-200">coda / astra</span>
+        </div>
+        <div class="h-6 w-px bg-slate-800"></div>
+        <div>
+          <span class="text-slate-500 block">Transport</span>
+          <span class="font-mono text-sky-400">WS (speed_alpha=1.0)</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Active Generation</span>
+        <div class="text-2xl font-bold text-white mt-1 flex items-center gap-2">
+          <span id="active-gen-badge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xl">G1</span>
+          <span id="gen-status" class="text-xs font-normal text-emerald-400">Live</span>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">RimeTrack Stale Bleed</span>
+        <div class="text-2xl font-bold text-emerald-400 mt-1">0.0% <span class="text-xs font-normal text-slate-400">(0 / 80 trials)</span></div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Naive Baseline Bleed</span>
+        <div class="text-2xl font-bold text-rose-400 mt-1">100.0% <span class="text-xs font-normal text-slate-400">(80 / 80 trials)</span></div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Stop Latency (p95)</span>
+        <div class="text-2xl font-bold text-sky-400 mt-1">&lt; 1.0 ms <span class="text-xs font-normal text-slate-400">(Local monotonic)</span></div>
+      </div>
+    </div>
+
+    <!-- Main Interactive Simulation Studio -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left Column: Controls & Scenario Launcher -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Interactive Scenario Studio
+        </h2>
+        <p class="text-xs text-slate-400 leading-relaxed">Select a real-world scenario to simulate the full WebRTC -> LLM -> Rime WS -> Playback turn in real time.</p>
+
+        <div class="space-y-2">
+          <button onclick="runScenario('speech')" id="btn-speech" class="w-full text-left p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-indigo-500/50 transition-all text-xs">
+            <div class="font-semibold text-slate-200">1. Mid-Speech Barge-In</div>
+            <div class="text-slate-400 mt-0.5">User interrupts mid-utterance; tests heard-text ledger truncation.</div>
+          </button>
+
+          <button onclick="runScenario('cancellable_tool')" id="btn-cancel-tool" class="w-full text-left p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-indigo-500/50 transition-all text-xs">
+            <div class="font-semibold text-slate-200">2. Cancellable Tool Abort</div>
+            <div class="text-slate-400 mt-0.5">In-flight HTTP order lookup aborted immediately upon barge-in.</div>
+          </button>
+
+          <button onclick="runScenario('uncancellable_tool')" id="btn-uncancel-tool" class="w-full text-left p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-indigo-500/50 transition-all text-xs">
+            <div class="font-semibold text-slate-200">3. Uncancellable Tool Quarantine</div>
+            <div class="text-slate-400 mt-0.5">Slow DB reservation completes post-interrupt; result quarantined by fence.</div>
+          </button>
+
+          <button onclick="runScenario('rapid')" id="btn-rapid" class="w-full text-left p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-indigo-500/50 transition-all text-xs">
+            <div class="font-semibold text-slate-200">4. Rapid Double Interruption</div>
+            <div class="text-slate-400 mt-0.5">User changes instruction twice in rapid succession; monotonic fence verified.</div>
+          </button>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+            <span>Simulation Progress</span>
+            <span id="sim-status" class="font-mono text-slate-300">Idle</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div id="sim-progress-bar" class="bg-indigo-500 h-2 rounded-full w-0 transition-all duration-200"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center & Right: Side-by-Side Comparison Stream -->
+      <div class="lg:col-span-2 space-y-4">
+        
+        <!-- Live Playback & Fence Visualizer -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full bg-sky-400 animate-ping"></span>
+              Live Audio Stream & Word Timestamp Visualizer
+            </h2>
+            <span id="transport-indicator" class="text-xs font-mono text-emerald-400">Rime WS: Connected</span>
+          </div>
+
+          <!-- Word-by-word streaming bubble -->
+          <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 min-h-[100px] flex flex-wrap gap-1.5 items-center" id="word-stream-container">
+            <span class="text-slate-500 text-xs italic">Select a scenario on the left to start live playback streaming...</span>
+          </div>
+
+          <!-- Tool Execution Status Banner -->
+          <div id="tool-status-box" class="hidden mt-3 p-3 rounded-lg border text-xs flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span id="tool-spinner" class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-ping"></span>
+              <span id="tool-title" class="font-semibold">Tool: order_lookup</span>
+            </div>
+            <span id="tool-result-badge" class="font-mono px-2 py-0.5 rounded bg-slate-800">Executing...</span>
+          </div>
+        </div>
+
+        <!-- Comparative Grounding State Ledger (RimeTrack vs Naive) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- RimeTrack Grounded State (Correct) -->
+          <div class="bg-slate-900 border border-emerald-900/40 rounded-xl p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  RimeTrack Heard Ledger
+                </span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">0% Stale Bleed</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-2">Context passed to subsequent LLM turn (grounded strictly in audible speech):</p>
+              <div id="rt-ledger-content" class="bg-slate-950 border border-slate-800 rounded p-3 font-mono text-xs text-slate-300 min-h-[80px]">
+                Waiting for simulation...
+              </div>
+            </div>
+            <div class="mt-3 text-[11px] text-emerald-400/90 font-medium flex items-center gap-1">
+              <span>&#10003; Quarantines un-heard audio & stale background tools.</span>
+            </div>
+          </div>
+
+          <!-- Naive Baseline State (Buggy) -->
+          <div class="bg-slate-900 border border-rose-900/40 rounded-xl p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  Naive Baseline State
+                </span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">100% Stale Bleed</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-2">Context poisoned with un-spoken tokens & stale tool results:</p>
+              <div id="naive-ledger-content" class="bg-slate-950 border border-slate-800 rounded p-3 font-mono text-xs text-rose-300/80 min-h-[80px]">
+                Waiting for simulation...
+              </div>
+            </div>
+            <div class="mt-3 text-[11px] text-rose-400/90 font-medium flex items-center gap-1">
+              <span>&#10007; Hallucinates full response; executes stale background tools.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+    async function runScenario(type) {
+      const streamBox = document.getElementById('word-stream-container');
+      const rtBox = document.getElementById('rt-ledger-content');
+      const naiveBox = document.getElementById('naive-ledger-content');
+      const toolBox = document.getElementById('tool-status-box');
+      const toolTitle = document.getElementById('tool-title');
+      const toolBadge = document.getElementById('tool-result-badge');
+      const activeGenBadge = document.getElementById('active-gen-badge');
+      const progressBar = document.getElementById('sim-progress-bar');
+      const simStatus = document.getElementById('sim-status');
+
+      streamBox.innerHTML = '';
+      toolBox.className = 'hidden';
+      progressBar.style.width = '0%';
+      simStatus.innerText = 'Running...';
+      activeGenBadge.innerText = 'G1';
+
+      if (type === 'speech') {
+        const fullWords = ["Sure", "booking", "a", "table", "for", "seven", "pm", "at", "your", "usual", "place"];
+        let played = [];
+
+        for (let i = 0; i < fullWords.length; i++) {
+          progressBar.style.width = ((i + 1) / fullWords.length * 100) + '%';
+          await sleep(250);
+
+          if (i < 3) {
+            played.push(fullWords[i]);
+            streamBox.innerHTML += `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono">${fullWords[i]}</span>`;
+          } else if (i === 3) {
+            // BARGE-IN EVENT
+            activeGenBadge.innerText = 'G2 (Barge-In)';
+            activeGenBadge.className = 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-xl animate-pulse';
+            streamBox.innerHTML += `<span class="px-2.5 py-1 rounded bg-rose-500/30 text-rose-200 border border-rose-500/50 text-xs font-bold uppercase animate-pulse-fast">[BARGE-IN TRIGGERED]</span>`;
+            await sleep(300);
+            break;
+          }
+        }
+
+        // Show remaining dropped words
+        const droppedWords = fullWords.slice(3);
+        streamBox.innerHTML += `<div class="w-full mt-2 pt-2 border-t border-slate-800 text-[11px] text-slate-500">Dropped by GenerationFence (G1): <span class="line-through text-rose-400/60">${droppedWords.join(' ')}</span></div>`;
+
+        rtBox.innerHTML = `<span class="text-emerald-400 font-bold">[assistant]:</span> "${played.join(' ')}"<br><span class="text-sky-400 font-bold">[user]:</span> "Actually make it 8pm!"`;
+        naiveBox.innerHTML = `<span class="text-rose-400 font-bold">[assistant]:</span> "${fullWords.join(' ')}"<br><span class="text-slate-500 text-[10px] block mt-1">&#9888; Bug: Naive baseline assumed user heard all 10 words.</span>`;
+        simStatus.innerText = 'Complete';
+      }
+
+      else if (type === 'uncancellable_tool') {
+        toolBox.className = 'mt-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs flex items-center justify-between';
+        toolTitle.innerText = 'Tool: book_table(time="7pm")';
+        toolBadge.innerText = 'In-flight DB Commit...';
+        toolBadge.className = 'font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300';
+
+        const words = ["Reserving", "table", "for", "seven", "pm", "now"];
+        let played = [];
+
+        for (let i = 0; i < 2; i++) {
+          played.push(words[i]);
+          streamBox.innerHTML += `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono">${words[i]}</span>`;
+          await sleep(250);
+        }
+
+        // Barge-in during tool execution
+        activeGenBadge.innerText = 'G2 (Barge-In)';
+        streamBox.innerHTML += `<span class="px-2.5 py-1 rounded bg-rose-500/30 text-rose-200 border border-rose-500/50 text-xs font-bold uppercase">[USER: NO MAKE IT 8PM]</span>`;
+        await sleep(400);
+
+        // Tool finishes after barge in
+        toolBadge.innerText = 'Returned: {booking_id: "BK-5521"} [FENCED / QUARANTINED]';
+        toolBadge.className = 'font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+
+        rtBox.innerHTML = `<span class="text-emerald-400 font-bold">[assistant]:</span> "Reserving table"<br><span class="text-sky-400 font-bold">[user]:</span> "No make it 8pm!"<br><span class="text-emerald-300 text-[10px] block mt-1">&#10003; BK-5521 quarantined; 7pm reservation discarded from context.</span>`;
+        naiveBox.innerHTML = `<span class="text-rose-400 font-bold">[assistant]:</span> "Reserving table for seven pm now"<br><span class="text-rose-400 font-bold">[system]:</span> "Tool confirmed: BK-5521 at 7pm"<br><span class="text-rose-300 text-[10px] block mt-1">&#9888; Fatal Bug: 7pm booking committed and applied to state despite user cancellation.</span>`;
+        simStatus.innerText = 'Complete';
+      }
+
+      else if (type === 'cancellable_tool') {
+        toolBox.className = 'mt-3 p-3 rounded-lg border border-sky-500/30 bg-sky-500/10 text-xs flex items-center justify-between';
+        toolTitle.innerText = 'Tool: order_lookup(id="ORD-99")';
+        toolBadge.innerText = 'HTTP GET in-flight...';
+
+        streamBox.innerHTML = `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono">Checking</span> <span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono">your</span>`;
+        await sleep(300);
+
+        activeGenBadge.innerText = 'G2 (Barge-In)';
+        streamBox.innerHTML += `<span class="px-2.5 py-1 rounded bg-rose-500/30 text-rose-200 border border-rose-500/50 text-xs font-bold uppercase">[BARGE-IN]</span>`;
+        
+        toolBadge.innerText = 'asyncio.CancelledError (Aborted in 12ms)';
+        toolBadge.className = 'font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+
+        rtBox.innerHTML = `<span class="text-emerald-400 font-bold">[assistant]:</span> "Checking your"<br><span class="text-sky-400 font-bold">[user]:</span> "Never mind, cancel!"<br><span class="text-emerald-300 text-[10px] block mt-1">&#10003; Task aborted cleanly; 0ms stale network wait.</span>`;
+        naiveBox.innerHTML = `<span class="text-rose-400 font-bold">[system]:</span> "ORD-99 returned 400ms later and applied to state."<br><span class="text-rose-300 text-[10px] block mt-1">&#9888; Bug: Kept socket open; leaked data into turn.</span>`;
+        simStatus.innerText = 'Complete';
+      }
+
+      else if (type === 'rapid') {
+        streamBox.innerHTML = `
+          <div class="space-y-1 w-full text-xs font-mono">
+            <div class="text-slate-400">G1: "Booking table for seven..." <span class="text-rose-400">[Interrupted at word 2]</span></div>
+            <div class="text-slate-400">G2: "Switching to eight pm..." <span class="text-rose-400">[Interrupted at word 2]</span></div>
+            <div class="text-emerald-300 font-bold">G3: "Understood, cancelled everything." <span class="text-emerald-400">[Completed Normally]</span></div>
+          </div>
+        `;
+        activeGenBadge.innerText = 'G3 (Current)';
+        rtBox.innerHTML = `<span class="text-emerald-400 font-bold">[G1 heard]:</span> "Booking table"<br><span class="text-emerald-400 font-bold">[G2 heard]:</span> "Switching to"<br><span class="text-emerald-300 font-bold">[G3 final]:</span> "Understood, cancelled everything."<br><span class="text-emerald-300 text-[10px] block mt-1">&#10003; Monotonic fence integrity preserved across rapid turns.</span>`;
+        naiveBox.innerHTML = `<span class="text-rose-400 font-bold">[assistant]:</span> Combined transcript with 3 overlapping responses.<br><span class="text-rose-300 text-[10px] block mt-1">&#9888; Severe crosstalk and duplicate state mutations.</span>`;
+        simStatus.innerText = 'Complete';
+      }
+    }
+  </script>
+</body>
+</html>

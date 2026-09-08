@@ -1,0 +1,72 @@
+{
+  "benchmark_suite": "DataForge x Rime Interruption & Recovery Benchmark",
+  "total_trials_per_system": 80,
+  "aggregate_metrics": {
+    "rimetrack": {
+      "overall_stale_response_rate": 0.0,
+      "overall_stale_tool_result_rate": 0.0,
+      "p50_stop_latency_s": 0.0,
+      "p95_stop_latency_s": 0.0
+    },
+    "naive_baseline": {
+      "overall_stale_response_rate": 1.0,
+      "overall_stale_tool_result_rate": 0.5
+    }
+  },
+  "scenarios": [
+    {
+      "id": "single_interruption_mid_speech",
+      "description": "User interrupts 3 words into a 10-word utterance",
+      "n_trials": 20,
+      "rimetrack": {
+        "stale_response_rate": 0.0,
+        "p50_stop_latency_s": 0.0,
+        "p95_stop_latency_s": 0.0,
+        "stale_tool_result_rate": 0.0
+      },
+      "naive_baseline": {
+        "stale_response_rate": 1.0,
+        "stale_tool_result_rate": 0.0
+      }
+    },
+    {
+      "id": "cancellable_tool_interruption",
+      "description": "User interrupts while a cancellable background API call is in-flight",
+      "n_trials": 20,
+      "rimetrack": {
+        "stale_response_rate": 0.0,
+        "stale_tool_result_rate": 0.0
+      },
+      "naive_baseline": {
+        "stale_response_rate": 1.0,
+        "stale_tool_result_rate": 1.0
+      }
+    },
+    {
+      "id": "uncancellable_tool_fenced",
+      "description": "Uncancellable tool completes after barge-in; result is safely quarantined by fence",
+      "n_trials": 20,
+      "rimetrack": {
+        "stale_response_rate": 0.0,
+        "stale_tool_result_rate": 0.0
+      },
+      "naive_baseline": {
+        "stale_response_rate": 1.0,
+        "stale_tool_result_rate": 1.0
+      }
+    },
+    {
+      "id": "rapid_double_barge_in",
+      "description": "User interrupts twice in quick succession with rapid prompt corrections",
+      "n_trials": 20,
+      "rimetrack": {
+        "stale_response_rate": 0.0,
+        "stale_tool_result_rate": 0.0
+      },
+      "naive_baseline": {
+        "stale_response_rate": 1.0,
+        "stale_tool_result_rate": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[project]
+name = "rimetrack"
+version = "0.1.0"
+description = "Interruption and recovery in realtime voice agents — DataForge x Rime Hackathon"
+requires-python = ">=3.11"
+dependencies = [
+    "livekit-agents[rime,deepgram,openai,silero]",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
