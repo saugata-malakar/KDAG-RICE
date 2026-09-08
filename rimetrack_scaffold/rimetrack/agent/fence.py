@@ -95,6 +95,12 @@ class GenerationFence:
         raise)."""
         with self._lock:
             self._cancelled_ids.add(generation_id)
+            # Eviction policy: keep only the last 1000 cancelled IDs to
+            # prevent unbounded memory growth in long-running sessions.
+            if len(self._cancelled_ids) > 1000:
+                # Remove oldest entries (lowest numeric suffix) keeping recent ones
+                sorted_ids = sorted(self._cancelled_ids, key=lambda x: int(x.lstrip(self._id_prefix) or "0"))
+                self._cancelled_ids = set(sorted_ids[-500:])
         self._notify(FenceEvent(kind="cancelled", generation_id=generation_id, reason=reason))
 
     def interrupt_current(self, *, reason: str = "barge_in") -> tuple[str | None, str]:
@@ -115,7 +121,10 @@ class GenerationFence:
 
     def _notify(self, event: FenceEvent) -> None:
         for fn in self._listeners:
-            fn(event)
+            try:
+                fn(event)
+            except Exception:  # noqa: BLE001 — listener errors must not break fence transitions
+                pass
 
 
 class StaleResultError(Exception):

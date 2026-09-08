@@ -107,7 +107,7 @@ class RimeTrackPipeline:
             tool_task = None
 
         normalized_text = normalize_for_tts(response_text)
-        words = normalized_text.split(" ")
+        words = normalized_text.split()  # split() without args handles consecutive spaces
         for i, word in enumerate(words):
             await asyncio.sleep(self._word_delay)  # simulated LLM token latency
             if self.fence.is_stale(gen_id):

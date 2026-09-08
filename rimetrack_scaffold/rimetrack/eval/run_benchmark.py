@@ -149,7 +149,7 @@ async def run_scenario_3_uncancellable_tool(n: int) -> dict:
     rt_results, naive_results, rt_events = [], [], []
 
     async def uncancellable_booking():
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.06)
         return {"booking_id": "BK-5521", "confirmed": True}
 
     for _ in range(n):
@@ -180,8 +180,9 @@ async def run_scenario_3_uncancellable_tool(n: int) -> dict:
         )
         naive_results.append(r)
 
-    # In RimeTrack, tool returns value but is marked cancelled/stale and quarantined
-    rt_fenced_correctly = all(r.tool_result.cancelled or r.tool_result.is_stale(GenerationFence()) for r in rt_results if r.tool_result)
+    # In RimeTrack, tool returns value but is marked cancelled (quarantined) by the ToolExecutor.
+    # The ToolExecutor sets cancelled=True when a result completes after its generation was superseded.
+    rt_fenced_correctly = all(r.tool_result.cancelled for r in rt_results if r.tool_result)
     naive_stale_tool = [r.tool_applied_after_interrupt for r in naive_results]
 
     return {
@@ -236,16 +237,33 @@ async def run_scenario_4_rapid_double_barge_in(n: int) -> dict:
         r3 = await pipeline.run_turn("Never mind, cancel both", "Understood, cancelled everything")
         naive_results.append((r1, r2, r3))
 
+    # Compute stale rates from actual trial results
+    # RimeTrack: check that interrupted turns (r1, r2) have truncated heard-text, not full response
+    rt_stale_count = 0
+    for r1, r2, r3 in rt_results:
+        if not r1.completed and r1.heard_text and r1.heard_text.strip() == "Booking table for seven pm at your usual place":
+            rt_stale_count += 1  # Full text leaked despite interruption
+        if not r2.completed and r2.heard_text and r2.heard_text.strip() == "Switching to eight pm at the downtown venue":
+            rt_stale_count += 1
+
+    # Naive: interrupted turns still apply full text to context
+    naive_stale_count = 0
+    for r1, r2, r3 in naive_results:
+        if r1.interrupted and r1.applied_text.strip():
+            naive_stale_count += 1
+        if r2.interrupted and r2.applied_text.strip():
+            naive_stale_count += 1
+
     return {
         "scenario": "rapid_double_barge_in",
         "description": "User interrupts twice in quick succession with rapid prompt corrections",
         "n_trials": n,
         "rimetrack": {
-            "stale_response_rate": 0.0,
+            "stale_response_rate": rt_stale_count / (n * 2) if n > 0 else 0.0,
             "stale_tool_result_rate": 0.0,
         },
         "naive_baseline": {
-            "stale_response_rate": 1.0,
+            "stale_response_rate": naive_stale_count / (n * 2) if n > 0 else 0.0,
             "stale_tool_result_rate": 0.0,
         },
         "raw_rt": rt_results,
@@ -298,9 +316,36 @@ async def main() -> None:
         writer.writerow(["scenario", "system", "trial_idx", "stale_response", "stale_tool_result"])
         for s in scenarios:
             sc_name = s["scenario"]
+            raw_rt = s.get("raw_rt", [])
+            raw_naive = s.get("raw_naive", [])
             for i in range(N_TRIALS):
-                writer.writerow([sc_name, "rimetrack", i, s["rimetrack"]["stale_response_rate"] > 0, s["rimetrack"]["stale_tool_result_rate"] > 0])
-                writer.writerow([sc_name, "naive", i, s["naive_baseline"]["stale_response_rate"] > 0, s["naive_baseline"]["stale_tool_result_rate"] > 0])
+                # Per-trial RimeTrack outcome
+                if i < len(raw_rt):
+                    rt_r = raw_rt[i]
+                    if isinstance(rt_r, tuple):
+                        # Scenario 4: tuple of (r1, r2, r3)
+                        rt_stale = any(not r.completed and r.heard_text and len(r.heard_text.split()) > 5 for r in rt_r[:2])
+                        rt_tool_stale = False
+                    else:
+                        rt_stale = not rt_r.completed and rt_r.heard_text and rt_r.heard_text.strip() == SCENARIO_RESPONSE.strip()
+                        rt_tool_stale = rt_r.tool_result is not None and not rt_r.tool_result.cancelled and not rt_r.completed
+                else:
+                    rt_stale, rt_tool_stale = False, False
+
+                # Per-trial Naive outcome
+                if i < len(raw_naive):
+                    naive_r = raw_naive[i]
+                    if isinstance(naive_r, tuple):
+                        naive_stale = any(r.interrupted and r.applied_text.strip() for r in naive_r[:2])
+                        naive_tool_stale = False
+                    else:
+                        naive_stale = getattr(naive_r, 'interrupted', False) and bool(getattr(naive_r, 'applied_text', '').strip())
+                        naive_tool_stale = getattr(naive_r, 'tool_applied_after_interrupt', False)
+                else:
+                    naive_stale, naive_tool_stale = False, False
+
+                writer.writerow([sc_name, "rimetrack", i, rt_stale, rt_tool_stale])
+                writer.writerow([sc_name, "naive", i, naive_stale, naive_tool_stale])
 
     print("\n" + "=" * 70)
     print("DATA FORGE x RIME BENCHMARK RESULTS")

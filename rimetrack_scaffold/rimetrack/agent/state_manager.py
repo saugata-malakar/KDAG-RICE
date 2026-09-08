@@ -68,6 +68,10 @@ class Turn:
     """True if this assistant turn was cut short by an interruption —
     `text` is the heard-prefix, not necessarily the full generated
     response."""
+    is_estimated: bool = True
+    """True when the heard-text was derived from the chunk-flush proxy
+    path. False when grounded in LiveKit's native word-timing alignment
+    from Rime WebSocket timestamps (the preferred path)."""
 
 
 @dataclass
@@ -165,6 +169,7 @@ class ConversationStateManager:
             text=text,
             generation_id=generation_id,
             truncated=bool(item.interrupted),
+            is_estimated=False,  # LiveKit-native path uses real Rime WS word timing
         )
         self._history.append(turn)
         return turn
