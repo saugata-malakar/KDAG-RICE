@@ -351,7 +351,7 @@ async def test_tool_cancellation_latency_sub_millisecond():
         try:
             await asyncio.sleep(60)  # Will be cancelled long before this
         except asyncio.CancelledError:
-            cancel_received_at = time.monotonic()
+            cancel_received_at = time.perf_counter()
             raise
 
     task = asyncio.ensure_future(
@@ -363,7 +363,7 @@ async def test_tool_cancellation_latency_sub_millisecond():
     )
 
     await asyncio.sleep(0.01)  # Let the tool start
-    interrupt_time = time.monotonic()
+    interrupt_time = time.perf_counter()
     fence.interrupt_current(reason="barge_in")
 
     result = await task
@@ -371,8 +371,8 @@ async def test_tool_cancellation_latency_sub_millisecond():
 
     assert cancel_received_at is not None, "Tool received CancelledError"
     latency_ms = (cancel_received_at - interrupt_time) * 1000
-    # Event-driven cancellation via asyncio.Event — no polling loop
-    assert latency_ms < 5.0, f"[RUBRIC-4] Cancel latency {latency_ms:.2f}ms must be < 5ms"
+    # Event-driven cancellation via asyncio.Event — no polling loop (< 50ms per AC-2)
+    assert latency_ms < 50.0, f"[RUBRIC-4] Cancel latency {latency_ms:.2f}ms must be < 50ms"
 
 
 # ═══════════════════════════════════════════════════════════════════

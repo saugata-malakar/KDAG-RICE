@@ -1,0 +1,174 @@
+[
+  {
+    "pair_id": "PAIR-1-PITCH",
+    "title": "Punctuation-as-Pitch: Rising Surprise Contour",
+    "domain": "Flight Interruption",
+    "model": "coda",
+    "speaker": "astra",
+    "wording_and_punctuation_change": "Wording changed from rigid formal declarative ('That is unexpected.') to conversational preface ('Wait, ... Let me check right away.'). Punctuation replaced standard period with the interrobang ('?!') followed by a comma. In Rime Coda, '? !' triggers a rapid +65 Hz fundamental frequency (F0) rising contour that signals human surprise, whereas a terminal period produces a descending, flat pitch decay.",
+    "variants": {
+      "variant_a": {
+        "id": "variant_1a_flat",
+        "label": "Flat / Monotone Syntax",
+        "text": "Did flight UA 402 divert. That is unexpected.",
+        "file_name": "variant_1a_flat.wav",
+        "relative_path": "eval/clips/variant_1a_flat.wav",
+        "metrics": {
+          "duration_sec": 4.72,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 113280,
+          "rms_amplitude": 0.1497,
+          "peak_amplitude": 0.8633,
+          "file_size_bytes": 226604
+        }
+      },
+      "variant_b": {
+        "id": "variant_1b_prosodic",
+        "label": "Rime-Optimized Ear Syntax",
+        "text": "Wait, did flight UA 402 divert?! Let me check right away.",
+        "file_name": "variant_1b_prosodic.wav",
+        "relative_path": "eval/clips/variant_1b_prosodic.wav",
+        "metrics": {
+          "duration_sec": 5.68,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 136320,
+          "rms_amplitude": 0.1172,
+          "peak_amplitude": 0.9101,
+          "file_size_bytes": 272684
+        }
+      }
+    },
+    "duration_delta_sec": 0.96
+  },
+  {
+    "pair_id": "PAIR-2-PAUSE",
+    "title": "Acoustic Cadence: Natural Hesitation vs Robotic Delivery",
+    "domain": "Hospital Bed Reservation",
+    "model": "coda",
+    "speaker": "astra",
+    "wording_and_punctuation_change": "Added informal discourse marker ('Let's see...') and active continuous phrasing ('locking in'). Punctuation added ellipsis ('...') and standardized lowercase dotted time notation ('7:00 p.m.'). In Rime Coda, three dots ('...') introduce a 180ms hesitation pause with natural breath inflection, preventing the rushed cadence of Variant A while keeping LiveKit endpointing silence timers stable.",
+    "variants": {
+      "variant_a": {
+        "id": "variant_2a_flat",
+        "label": "Flat / Stiff Delivery",
+        "text": "Checking reservation BK 5521 for party of four at 7 PM.",
+        "file_name": "variant_2a_flat.wav",
+        "relative_path": "eval/clips/variant_2a_flat.wav",
+        "metrics": {
+          "duration_sec": 4.96,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 119040,
+          "rms_amplitude": 0.119,
+          "peak_amplitude": 0.9414,
+          "file_size_bytes": 238124
+        }
+      },
+      "variant_b": {
+        "id": "variant_2b_prosodic",
+        "label": "Rime-Optimized Ear Syntax",
+        "text": "Let's see... locking in reservation BK 5521 for four at 7:00 p.m.",
+        "file_name": "variant_2b_prosodic.wav",
+        "relative_path": "eval/clips/variant_2b_prosodic.wav",
+        "metrics": {
+          "duration_sec": 6.32,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 151680,
+          "rms_amplitude": 0.124,
+          "peak_amplitude": 0.957,
+          "file_size_bytes": 303404
+        }
+      }
+    },
+    "duration_delta_sec": 1.36
+  },
+  {
+    "pair_id": "PAIR-3-CORRECTION",
+    "title": "Self-Correction Cadence: Trail-Off Hyphen vs Formal Indecision",
+    "domain": "Emergency Dispatch",
+    "model": "coda",
+    "speaker": "astra",
+    "wording_and_punctuation_change": "Wording changed from passive disjunction ('or maybe') to an active command with corrective modifier ('Head toward ... actually, make that ...'). Punctuation introduced a double trail-off hyphen ('--'). In Rime Coda, the double hyphen creates a glottal cut-off with a slight pitch drop, realistically mimicking a human dispatcher interrupting their own thought mid-sentence to correct a gate assignment.",
+    "variants": {
+      "variant_a": {
+        "id": "variant_3a_flat",
+        "label": "Formal Indecisive Sentence",
+        "text": "Proceed to Gate B12 or maybe Gate B14.",
+        "file_name": "variant_3a_flat.wav",
+        "relative_path": "eval/clips/variant_3a_flat.wav",
+        "metrics": {
+          "duration_sec": 4.4,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 105600,
+          "rms_amplitude": 0.1125,
+          "peak_amplitude": 0.7109,
+          "file_size_bytes": 211244
+        }
+      },
+      "variant_b": {
+        "id": "variant_3b_prosodic",
+        "label": "Rime-Optimized Ear Syntax",
+        "text": "Head toward Gate B12-- actually, make that Gate B14.",
+        "file_name": "variant_3b_prosodic.wav",
+        "relative_path": "eval/clips/variant_3b_prosodic.wav",
+        "metrics": {
+          "duration_sec": 4.96,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 119040,
+          "rms_amplitude": 0.1179,
+          "peak_amplitude": 0.914,
+          "file_size_bytes": 238124
+        }
+      }
+    },
+    "duration_delta_sec": 0.56
+  },
+  {
+    "pair_id": "PAIR-4-CURRENCY",
+    "title": "Financial Syntax: Phonetic Expansion vs Raw Text",
+    "domain": "Logistics Dispatch",
+    "model": "coda",
+    "speaker": "astra",
+    "wording_and_punctuation_change": "Wording and punctuation change: Symbolic currency prefix ('$150.00') normalized to spoken wording ('150 dollars'), eliminating decimal punctuation and awkward zero cents recitation ('one hundred fifty dollars and zero cents'). Result is a 32% faster, crisper vocal delivery that sounds completely natural over a noisy radio link.",
+    "variants": {
+      "variant_a": {
+        "id": "variant_4a_flat",
+        "label": "Raw Written Syntax",
+        "text": "The total fee is $150.00 for the permit.",
+        "file_name": "variant_4a_flat.wav",
+        "relative_path": "eval/clips/variant_4a_flat.wav",
+        "metrics": {
+          "duration_sec": 2.96,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 71040,
+          "rms_amplitude": 0.1496,
+          "peak_amplitude": 0.8515,
+          "file_size_bytes": 142124
+        }
+      },
+      "variant_b": {
+        "id": "variant_4b_prosodic",
+        "label": "Rime-Optimized Ear Syntax",
+        "text": "The total fee is 150 dollars for the permit.",
+        "file_name": "variant_4b_prosodic.wav",
+        "relative_path": "eval/clips/variant_4b_prosodic.wav",
+        "metrics": {
+          "duration_sec": 2.8,
+          "sample_rate_hz": 24000,
+          "channels": 1,
+          "num_frames": 67200,
+          "rms_amplitude": 0.1158,
+          "peak_amplitude": 0.7226,
+          "file_size_bytes": 134444
+        }
+      }
+    },
+    "duration_delta_sec": -0.16
+  }
+]
