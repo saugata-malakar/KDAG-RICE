@@ -150,9 +150,108 @@ We evaluated RimeTrack against the standard **Naive Baseline** across 80 empiric
 
 ---
 
-## 🛠️ 6. Quickstart & Local Reproduction
+## 🔧 6. Exact Rime Configuration
 
-### 1. Installation
+The following table specifies every Rime parameter used in production. These values are locked in [`agent/session.py`](agent/session.py) and validated by [`preflight_check.py`](preflight_check.py):
+
+| Parameter | Exact Value | Notes |
+|---|---|---|
+| **Model ID** | `coda` | Rime's production-grade ultra-low-latency conversational TTS model |
+| **Speaker** | `astra` | Clear, articulate female voice optimized for scheduling and dispatch |
+| **Language** | `eng` | English |
+| **Endpoint (WebSocket)** | `wss://users-ws.rime.ai/ws3` | Production Rime streaming TTS endpoint — used for all live synthesis |
+| **Endpoint (HTTP)** | `https://users.rime.ai/v1/rime-tts` | One-shot endpoint — used only by [`rime_quickstart.py`](rime_quickstart.py) |
+| **Transport** | **WebSocket** (`use_websocket=True`) | Enables (a) mid-stream `{"operation":"clear"}` cancellation, (b) per-word `timestamps` alignment, (c) continuous duplex audio delivery |
+| **Audio Format** | PCM 16-bit, 24kHz, mono | Raw PCM chunks streamed over WebSocket, delivered via LiveKit WebRTC |
+| **Speed Control** | `speed_alpha=1.0` | Native speaking rate — adjustable per-session without re-synthesis |
+| **Wire-Protocol Clear Frame** | `{"operation":"clear","contextId":"G<n>"}` | Sent on barge-in to purge server-side synthesis buffers for superseded context |
+| **Wire-Protocol Flush Frame** | `{"flush":true}` | Signals end of text input for current context |
+| **Wire-Protocol EOS Frame** | `{"is_eos":true}` | Signals end of synthesis stream |
+| **LiveKit Plugin Version** | `livekit-plugins-rime==1.7.1` | Installed via `livekit-agents[rime]` metapackage |
+
+Configuration is set in code at [`agent/session.py:31-39`](agent/session.py):
+```python
+def build_rime_tts() -> rime.TTS:
+    return rime.TTS(
+        model=os.environ.get("RIME_MODEL", "coda"),
+        speaker=os.environ.get("RIME_SPEAKER", "astra"),
+        lang=os.environ.get("RIME_LANG", "eng"),
+        use_websocket=True,
+        speed_alpha=1.0,
+        api_key=os.environ.get("RIME_API_KEY"),
+    )
+```
+
+---
+
+## 🌐 7. Third-Party Services & Dependencies
+
+| Service | Role | Version / Model | Required? | Fallback |
+|---|---|---|:---:|---|
+| **Rime Labs** | Primary TTS (spoken output) | `coda` model, `astra` speaker, WebSocket | **Yes** | None — Rime is the designated voice provider |
+| **LiveKit Cloud** | WebRTC transport & room infrastructure | Agents SDK `1.7.1` | **Yes** | None |
+| **OpenAI** | LLM (conversation intelligence) | `gpt-4o-mini` | **Yes** | None |
+| **Deepgram** | Primary STT (speech recognition) | `nova-3` | No | OpenAI Whisper STT |
+| **Silero VAD** | Voice Activity Detection | `silero-vad` via LiveKit plugin | **Yes** | Built into LiveKit Agents |
+
+### Python Dependencies (from [`pyproject.toml`](pyproject.toml))
+```
+livekit-agents[rime,deepgram,openai,silero]   # Core agent framework with all plugins
+python-dotenv                                  # Environment variable loading from .env
+pytest + pytest-asyncio                        # Test framework (dev dependency)
+```
+
+### No Additional Infrastructure Required
+- **No database** — tool demonstrations use in-memory mock responses with deliberate delays
+- **No external queue** — all event routing is in-process via `asyncio`
+- **No Docker** — runs directly with `python -m agent.session dev`
+
+---
+
+## 🖥️ 8. Working Code & Demo
+
+### Source Repository
+**All demonstrated behavior exists in this repository and can be reproduced by judges.**
+
+| What | Link |
+|---|---|
+| **GitHub Repository** | [https://github.com/saugata-malakar/KDAG-RICE](https://github.com/saugata-malakar/KDAG-RICE) |
+| **Branch** | `main` (all commits on default branch) |
+| **Language** | Python 3.11+ |
+| **Total Test Coverage** | 55/55 tests passing across 8 test files |
+| **Benchmark Data** | 160 trials (80 per system), raw CSV committed |
+
+### Working Demo Link
+Judges can test the live voice agent immediately in the browser:
+
+| Demo Method | Link / Instructions |
+|---|---|
+| **LiveKit Agents Playground** | [https://agents-playground.livekit.io/](https://agents-playground.livekit.io/) |
+| **Server URL** | `wss://rice-h02i5ol6.livekit.cloud` |
+| **Room Name** | `rimetrack-demo` |
+| **30-Day Judge Token** | See [§ LIVE DEMO](#-live-demo--judge-testing-instructions) above |
+| **Interactive Visual HUD** | Open [`client/index.html`](client/index.html) locally |
+| **Demo Recording Script** | [`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md) — 4-minute video recording blueprint |
+
+### Reproducing Demonstrated Behavior
+Every behavior shown in the demo exists in the source code and can be reproduced:
+
+| Demonstrated Behavior | Source File | Reproduction Command |
+|---|---|---|
+| Barge-in halts audio instantly | [`agent/rime_ws_client.py`](agent/rime_ws_client.py) | `pytest tests/stress/test_rime_client.py -v` |
+| Stale tool result is quarantined | [`agent/tool_executor.py`](agent/tool_executor.py) | `pytest tests/stress/test_tools.py -v` |
+| Heard-text grounding (no context poisoning) | [`agent/state_manager.py`](agent/state_manager.py) | `pytest tests/stress/test_state_manager.py -v` |
+| 0.0% stale rate vs 100% baseline | [`eval/run_benchmark.py`](eval/run_benchmark.py) | `python -m eval.run_benchmark` |
+| Monotonic fence under rapid interruptions | [`agent/fence.py`](agent/fence.py) | `pytest tests/stress/test_fence.py -v` |
+| End-to-end multi-turn scenarios | [`agent/pipeline.py`](agent/pipeline.py) | `pytest tests/stress/test_pipeline_scenarios.py -v` |
+| LiveKit session event wiring | [`agent/session.py`](agent/session.py) | `pytest tests/stress/test_session_wiring.py -v` |
+| Pre-TTS text normalization | [`agent/text_normalize.py`](agent/text_normalize.py) | `pytest tests/stress/test_text_normalize.py -v` |
+
+---
+
+## 🛠️ 9. Setup Instructions & Local Reproduction
+
+### Step 1: Clone & Install
 ```bash
 git clone https://github.com/saugata-malakar/KDAG-RICE.git
 cd KDAG-RICE
@@ -168,48 +267,88 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-### 2. Configure Credentials (Local Mode)
-Copy `.env.example` to `.env` and provide your credentials (excluded from git):
+### Step 2: Configure Credentials
 ```bash
 cp .env.example .env
+# Edit .env with your actual API keys
 ```
-Environment variables supported:
-* `LIVEKIT_URL`: LiveKit Cloud project URL (`wss://...`)
-* `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET`: LiveKit credentials
-* `RIME_API_KEY`: Rime Labs API Key
-* `RIME_MODEL`: `coda` (default)
-* `RIME_SPEAKER`: `astra` (default)
-* `OPENAI_API_KEY`: OpenAI Key (for LLM and STT fallback)
-* `DEEPGRAM_API_KEY`: Deepgram Key (optional; falls back to OpenAI Whisper)
 
-### 3. Run the Full Test Suite (55/55 Passing)
+| Variable | Description | Required? |
+|---|---|:---:|
+| `LIVEKIT_URL` | LiveKit Cloud project URL (`wss://...`) | Yes |
+| `LIVEKIT_API_KEY` | LiveKit API key (starts with `API`) | Yes |
+| `LIVEKIT_API_SECRET` | LiveKit API secret | Yes |
+| `RIME_API_KEY` | Rime Labs API key | Yes |
+| `RIME_MODEL` | Rime TTS model (default: `coda`) | Yes |
+| `RIME_SPEAKER` | Rime TTS speaker (default: `astra`) | Yes |
+| `RIME_LANG` | Language code (default: `eng`) | Yes |
+| `OPENAI_API_KEY` | OpenAI API key (starts with `sk-`) | Yes |
+| `DEEPGRAM_API_KEY` | Deepgram API key | Optional |
+| `RIMETRACK_LOG_DIR` | Log output directory (default: `eval/results`) | Optional |
+| `RIMETRACK_LOG_LEVEL` | Log level: `DEBUG`/`INFO`/`WARNING` | Optional |
+
+### Step 3: Run Preflight Configuration Check
+```bash
+python preflight_check.py
+```
+Validates all API keys, organizer-specified Rime configuration, and scans for accidentally committed secrets.
+
+### Step 4: Run the Full Test Suite (55/55 Passing)
 ```bash
 pytest tests/ -v
 ```
 
-### 4. Run the 80-Trial Empirical Benchmark Suite
+### Step 5: Run the 80-Trial Empirical Benchmark Suite
 ```bash
 python -m eval.run_benchmark
 ```
 
-### 5. Run the Live Interruption Synchronizer Diagnostic
+### Step 6: Run the Live Interruption Synchronizer Diagnostic
 ```bash
 python -m eval.test_live_interrupted_turn_livekit
 ```
 
-### 6. Run the Official Rime 5-Minute Quickstart
+### Step 7: Run the Official Rime 5-Minute Quickstart
 ```bash
 python rime_quickstart.py "Hello! This is Rime speaking from RimeTrack."
 ```
 
-### 7. Start the Live Voice Agent Worker
+### Step 8: Start the Live Voice Agent Worker
 ```bash
 python -m agent.session dev
 ```
 
 ---
 
-## 📁 7. Repository Structure
+## ⚠️ 10. Known Limitations & Failure Behavior
+
+### Known Limitations
+
+| # | Limitation | Impact | Mitigation |
+|:---:|---|---|---|
+| 1 | **Synthetic Benchmark Timing** | Automated benchmark uses calibrated `asyncio.sleep` intervals for 100% determinism. Real WebRTC network jitter (15–45ms) will produce slightly different latency numbers. | Fence architecture tolerates jitter — correctness is unaffected, only latency numbers differ. |
+| 2 | **LiveKit Event Correlation** | `ConversationItemAddedEvent` does not expose `speech_handle_id`. Items are attributed to the active `generation_id` at ingestion time. | Correct under single-active-speaker assumption. Multi-agent scenarios would need per-speaker fence partitioning. |
+| 3 | **Uncancellable Tool Side Effects** | RimeTrack quarantines stale tool *results* from conversational state, but cannot undo external side effects (e.g., an irreversible bank transfer already committed). | External systems must use compensating transactions, sagas, or two-phase commit for irreversible operations. |
+| 4 | **Rime Timestamp Race Window** | Rime's word-level timestamps arrive 500–800ms after audio starts streaming. Early interruptions (< 400ms) cause LiveKit's native synchronizer to fall back to full text. | RimeTrack's chunk-flush ledger provides Layer 2 defense during this race window. |
+| 5 | **Single-Speaker Assumption** | `ConversationStateManager` assumes one active agent speaker at a time. | Multi-agent or parallel synthesis scenarios would need per-speaker fence partitioning. |
+| 6 | **ChatMessage API Stability** | `item.content = [turn.text]` mutation depends on LiveKit's internal `ChatMessage` model structure. | If LiveKit changes `content` to an immutable type in a future release, the mutation path would need updating. |
+
+### Failure Behavior (What Happens When Things Go Wrong)
+
+| Failure Scenario | What Happens | User Impact |
+|---|---|---|
+| **Rime API key invalid or expired** | `preflight_check.py` catches this before startup. At runtime, `build_rime_tts()` raises connection error. Agent does not start. | Agent fails to start cleanly — no silent degradation. |
+| **LiveKit Cloud unreachable** | Worker fails to connect to room. `session.py` logs error and exits. | Agent does not start. Judge can verify with preflight check. |
+| **OpenAI API key invalid** | LLM calls fail. Agent connects to room but cannot generate responses. | Agent joins room but remains silent after user speaks. |
+| **Deepgram API key missing** | STT transparently falls back to OpenAI Whisper. | Slightly higher STT latency, but fully functional. |
+| **Rime WebSocket disconnects mid-synthesis** | `FencedRimeClient` detects connection loss. Current generation is marked stale. | Audio cuts off. Next user turn starts a fresh generation with a new WebSocket connection. |
+| **Tool function raises an exception** | `ToolExecutor` catches the exception, logs it via `EventLog`, and returns a `ToolResult` with `error=True`. Fence state is not corrupted. | Agent tells user the action failed and asks them to retry. |
+| **Rapid successive barge-ins (> 3 in 100ms)** | Each barge-in advances the `GenerationFence` monotonically. Only the latest generation is current. Sliding-window eviction caps cancelled ID storage at 1000. | All stale generations are fenced. Memory is bounded. |
+| **Network partition during tool execution** | Uncancellable tool may complete after reconnection. Result is fenced by `generation_id` check. | Stale result is quarantined — never spoken or applied. |
+
+---
+
+## 📁 11. Repository Structure
 
 ```
 ├── docs/
@@ -219,8 +358,9 @@ python -m agent.session dev
 │   └── architecture.md          # Sequence diagrams & data flows
 ├── RIME_EVIDENCE.md              # Formal voice claims, acceptance criteria & sync analysis
 ├── README.md                     # Master documentation, live judge token & benchmark summary
+├── preflight_check.py            # Secret & configuration validator (run before deployment)
 ├── pyproject.toml                # Package configuration & test dependencies
-├── .env.example                  # Sanitized environment template
+├── .env.example                  # Sanitized environment template (placeholders only)
 ├── rime_quickstart.py            # Official Rime 5-minute HTTPS TTS quickstart
 ├── agent/                        # Core Voice Agent Runtime
 │   ├── fence.py                  # GenerationFence (Monotonic authority, sliding-window eviction)
@@ -256,17 +396,18 @@ python -m agent.session dev
 
 ---
 
-## 📋 8. Judging Criteria Alignment Matrix
+## 📋 12. Judging Criteria Alignment Matrix
 
 | Hackathon Criterion | Weight | How RimeTrack Excels | Supporting Evidence |
 |---|:---:|---|---|
-| **Problem & Necessity of Voice** | 25% | Hands-busy workflow where removing speech destroys usability; solves context poisoning and stale tool bleed. | [`README.md §1`](#1-problem--necessity-of-voice-judging-weight-25), [`RIME_EVIDENCE.md §1`](RIME_EVIDENCE.md) |
+| **Problem & Necessity of Voice** | 25% | Hands-busy workflow where removing speech destroys usability; solves context poisoning and stale tool bleed. | [`README.md §1`](#-1-problem--necessity-of-voice-judging-weight-25), [`RIME_EVIDENCE.md §1`](RIME_EVIDENCE.md) |
 | **Hard Voice Engineering** | 25% | Monotonic GenerationFence, event-driven tool cancellation (<= 0.08ms), protocol-level WebSocket buffer clearing. | [`agent/fence.py`](agent/fence.py), [`agent/tool_executor.py`](agent/tool_executor.py), [`docs/ARCHITECTURE_REPORT.md`](docs/ARCHITECTURE_REPORT.md) |
 | **Rime Integration & Experience** | 20% | Primary spoken output over WebSocket using `coda`/`astra`; per-word timestamp alignment; Writing for the Ear prompt engineering. | [`agent/session.py`](agent/session.py), [`agent/rime_ws_client.py`](agent/rime_ws_client.py), [`docs/PROSODY_ANALYSIS.md`](docs/PROSODY_ANALYSIS.md) |
-| **Evidence & Reproducibility** | 20% | 80-trial empirical benchmark with 0.0% stale rate vs 100.0% baseline; 55 passing tests; raw trial CSV committed; live diagnostic script. | [`eval/results/benchmark_summary.json`](eval/results/benchmark_summary.json), [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py) |
-| **Demo Clarity** | 10% | LiveKit Agents Playground direct token access, 4-minute video recording blueprint, and interactive Visual HUD. | [`README.md §LIVE DEMO`](#live-demo--judge-testing-instructions), [`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md), [`client/index.html`](client/index.html) |
+| **Evidence & Reproducibility** | 20% | 80-trial empirical benchmark with 0.0% stale rate vs 100.0% baseline; 55 passing tests; raw trial CSV committed; live diagnostic script; preflight checker. | [`eval/results/benchmark_summary.json`](eval/results/benchmark_summary.json), [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py), [`preflight_check.py`](preflight_check.py) |
+| **Demo Clarity** | 10% | LiveKit Agents Playground direct token access, 4-minute video recording blueprint, and interactive Visual HUD. | [`README.md §LIVE DEMO`](#-live-demo--judge-testing-instructions), [`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md), [`client/index.html`](client/index.html) |
 
 ---
 
 ## ⚖️ License
 MIT License. Built for the DataForge × Rime Hackathon Challenge (2026).
+
