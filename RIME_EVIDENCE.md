@@ -47,13 +47,14 @@ An implementation **PASSES** the full acceptance test if and only if **all six c
 
 ## 3. Test Procedure & Evaluation Methodology
 
-### 3.1 Automated Test Suite (61/61 Passing)
+### 3.1 Automated Test Suite (66/66 Passing)
 
-The test suite validates all six acceptance criteria across 9 test files with 61 individual test cases:
+The test suite validates all six acceptance criteria across 10 test files with 66 individual test cases:
 
 | Test File | Tests | What It Verifies | Acceptance Criteria |
 |---|:---:|---|:---:|
 | [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) | 6 | **Direct Rubric Proof:** Fixed delay tool call interrupted mid-speech, changed request, audio cutoff, stale tool quarantine, updated instruction execution, sub-ms cancel latency, triple barge-in | AC-1 through AC-5 |
+| [`tests/stress/test_tts_comparative.py`](tests/stress/test_tts_comparative.py) | 5 | **Multi-TTS Comparative Suite:** Corpus structure (10 items), provider specs (Rime, ElevenLabs, Cartesia, OpenAI), latency decomposition ($t_{model}$ vs $t_{net}$), wire-level clear differentiation, trade-off completeness | Comparative Track |
 | [`tests/stress/test_fence.py`](tests/stress/test_fence.py) | 11 | Monotonic ID generation, thread-safety, rapid interruptions, sliding-window eviction, cancellable/uncancellable tool gating | AC-2, AC-3, AC-4 |
 | [`tests/stress/test_tools.py`](tests/stress/test_tools.py) | 7 | `book_restaurant` (3s delay), `check_flight_status` (1.5s delay), `check_weather` (0.5s delay) — normal completion, mid-delay interruption, concurrent fencing, error handling | AC-2, AC-3 |
 | [`tests/stress/test_state_manager.py`](tests/stress/test_state_manager.py) | 8 | Heard-text ledger commit, mid-sentence interruption prefix, grounded context for next LLM call, rapid consecutive interruption prefixes, LiveKit item ingestion | AC-1 |
@@ -75,7 +76,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 **Expected output:**
 ```
-====== 61 passed, 3 warnings in ~11s ======
+====== 66 passed, 3 warnings in ~10s ======
 ```
 
 ### 3.2 Empirical Benchmark Suite (80 Trials per System, 160 Total)

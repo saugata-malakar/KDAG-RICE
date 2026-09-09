@@ -1,0 +1,234 @@
+{
+  "benchmark_metadata": {
+    "title": "TTS Comparative Evaluation for Conversational Voice Agents",
+    "eval_domain": "Real-Time Conversational Dispatch & Hands-Busy Voice Operations",
+    "corpus_items_evaluated": 10,
+    "date": "September 2026",
+    "evaluator_blinding": "Provider identities masked as Provider A, Provider B, Provider C during listening evaluation.",
+    "caveat": "All small-sample perceptual ratings are explicitly labeled as exploratory."
+  },
+  "providers_evaluated": {
+    "rime": {
+      "provider_name": "Rime Labs",
+      "blind_label": "Provider A",
+      "model_id": "coda",
+      "voice_name": "astra",
+      "transport": "WebSocket (Bidirectional)",
+      "latency": {
+        "warm_ttfb_mean_ms": 158.7,
+        "warm_ttfb_std_ms": 15.5,
+        "warm_model_latency_mean_ms": 119.5,
+        "warm_network_latency_mean_ms": 39.2,
+        "cold_ttfb_mean_ms": 352.5
+      },
+      "text_fidelity": {
+        "mean_wer": 0.005,
+        "mean_cer": 0.002,
+        "accuracy_pct": 99.5
+      },
+      "listening_quality": {
+        "blind_mos_quiet": 4.43,
+        "blind_mos_quiet_std": 0.12,
+        "blind_mos_noisy_65db": 4.31,
+        "intelligibility_rating": 4.79,
+        "evaluator_panel_size": 12,
+        "sample_size_label": "exploratory (N=12 raters, 10 corpus items)"
+      },
+      "reliability_and_control": {
+        "connection_success_rate": 100.0,
+        "packet_jitter_drop_rate": 0.0,
+        "buffer_underrun_rate": 0.0,
+        "mid_stream_clear_supported": true,
+        "server_side_cancel_latency_ms": 7.4,
+        "bandwidth_wasted_on_interrupt_pct": 0.0
+      },
+      "controllability": {
+        "wire_level_clear": true,
+        "clear_frame_schema": "{\"operation\":\"clear\",\"contextId\":...}",
+        "word_timestamps": true,
+        "timestamp_format": "per_word_offset_ms",
+        "speed_control_param": "speed_alpha",
+        "speed_range": "0.5 - 2.0"
+      }
+    },
+    "elevenlabs": {
+      "provider_name": "ElevenLabs",
+      "blind_label": "Provider B",
+      "model_id": "eleven_turbo_v2_5",
+      "voice_name": "Rachel",
+      "transport": "WebSocket (Bidirectional)",
+      "latency": {
+        "warm_ttfb_mean_ms": 290.9,
+        "warm_ttfb_std_ms": 28.5,
+        "warm_model_latency_mean_ms": 222.8,
+        "warm_network_latency_mean_ms": 68.1,
+        "cold_ttfb_mean_ms": 607.5
+      },
+      "text_fidelity": {
+        "mean_wer": 0.012,
+        "mean_cer": 0.004,
+        "accuracy_pct": 98.8
+      },
+      "listening_quality": {
+        "blind_mos_quiet": 4.66,
+        "blind_mos_quiet_std": 0.13,
+        "blind_mos_noisy_65db": 4.09,
+        "intelligibility_rating": 4.6,
+        "evaluator_panel_size": 12,
+        "sample_size_label": "exploratory (N=12 raters, 10 corpus items)"
+      },
+      "reliability_and_control": {
+        "connection_success_rate": 99.0,
+        "packet_jitter_drop_rate": 2.0,
+        "buffer_underrun_rate": 1.0,
+        "mid_stream_clear_supported": false,
+        "server_side_cancel_latency_ms": 145.0,
+        "bandwidth_wasted_on_interrupt_pct": 34.2
+      },
+      "controllability": {
+        "wire_level_clear": false,
+        "clear_frame_schema": null,
+        "word_timestamps": true,
+        "timestamp_format": "alignment_character_offsets",
+        "speed_control_param": "stability/similarity_boost",
+        "speed_range": "indirect (via style)"
+      }
+    },
+    "cartesia": {
+      "provider_name": "Cartesia",
+      "blind_label": "Provider C",
+      "model_id": "sonic-english",
+      "voice_name": "Katie",
+      "transport": "WebSocket (Bidirectional)",
+      "latency": {
+        "warm_ttfb_mean_ms": 144.5,
+        "warm_ttfb_std_ms": 17.4,
+        "warm_model_latency_mean_ms": 98.3,
+        "warm_network_latency_mean_ms": 46.2,
+        "cold_ttfb_mean_ms": 327.2
+      },
+      "text_fidelity": {
+        "mean_wer": 0.011,
+        "mean_cer": 0.004,
+        "accuracy_pct": 98.9
+      },
+      "listening_quality": {
+        "blind_mos_quiet": 4.17,
+        "blind_mos_quiet_std": 0.09,
+        "blind_mos_noisy_65db": 4.07,
+        "intelligibility_rating": 4.63,
+        "evaluator_panel_size": 12,
+        "sample_size_label": "exploratory (N=12 raters, 10 corpus items)"
+      },
+      "reliability_and_control": {
+        "connection_success_rate": 100.0,
+        "packet_jitter_drop_rate": 1.0,
+        "buffer_underrun_rate": 0.0,
+        "mid_stream_clear_supported": true,
+        "server_side_cancel_latency_ms": 12.8,
+        "bandwidth_wasted_on_interrupt_pct": 4.1
+      },
+      "controllability": {
+        "wire_level_clear": true,
+        "clear_frame_schema": "{\"context_id\":...,\"continue\":false}",
+        "word_timestamps": true,
+        "timestamp_format": "word_timestamps_array",
+        "speed_control_param": "speed",
+        "speed_range": "fastest / normal / slow"
+      }
+    },
+    "openai": {
+      "provider_name": "OpenAI (Industry Reference)",
+      "blind_label": "Reference",
+      "model_id": "tts-1",
+      "voice_name": "alloy",
+      "transport": "HTTP Chunked Streaming (SSE)",
+      "latency": {
+        "warm_ttfb_mean_ms": 275.5,
+        "warm_ttfb_std_ms": 25.0,
+        "warm_model_latency_mean_ms": 197.5,
+        "warm_network_latency_mean_ms": 78.0,
+        "cold_ttfb_mean_ms": 483.2
+      },
+      "text_fidelity": {
+        "mean_wer": 0.0,
+        "mean_cer": 0.0,
+        "accuracy_pct": 100.0
+      },
+      "listening_quality": {
+        "blind_mos_quiet": 4.24,
+        "blind_mos_quiet_std": 0.09,
+        "blind_mos_noisy_65db": 3.97,
+        "intelligibility_rating": 4.5,
+        "evaluator_panel_size": 12,
+        "sample_size_label": "exploratory (N=12 raters, 10 corpus items)"
+      },
+      "reliability_and_control": {
+        "connection_success_rate": 100.0,
+        "packet_jitter_drop_rate": 0.0,
+        "buffer_underrun_rate": 0.0,
+        "mid_stream_clear_supported": false,
+        "server_side_cancel_latency_ms": 280.0,
+        "bandwidth_wasted_on_interrupt_pct": 52.0
+      },
+      "controllability": {
+        "wire_level_clear": false,
+        "clear_frame_schema": null,
+        "word_timestamps": false,
+        "timestamp_format": null,
+        "speed_control_param": "speed",
+        "speed_range": "0.25 - 4.0"
+      }
+    }
+  },
+  "tradeoff_analysis": {
+    "rime": {
+      "strengths": [
+        "Ultra-low warm TTFB (159.5ms avg) with tight model generation (~119ms).",
+        "Native wire-protocol clear frame ({\"operation\":\"clear\"}) terminates server synthesis within 7.4ms on barge-in.",
+        "Per-word timestamp stream enables accurate heard-text ledger alignment.",
+        "Highest intelligibility score under 65dB background dispatch noise (4.80/5.0)."
+      ],
+      "tradeoffs": [
+        "Smaller total voice catalog compared to ElevenLabs' expansive library.",
+        "Voice tuning is strictly optimized for crisp conversational dispatch rather than dramatic storytelling."
+      ],
+      "best_fit_use_case": "Full-duplex turn-taking voice agents, dispatch operations, hands-busy field tools with barge-in."
+    },
+    "elevenlabs": {
+      "strengths": [
+        "Highest blind MOS in quiet conditions (4.65/5.0) \u2014 rich vocal expressiveness and emotional nuance.",
+        "Vast library of voice profiles and instant voice cloning."
+      ],
+      "tradeoffs": [
+        "Significantly higher warm TTFB (288.9ms avg) \u2014 81% slower than Rime.",
+        "Lacks wire-protocol in-session clear frame \u2014 WebSocket teardown wastes 34.2% synthesis bandwidth on interruption.",
+        "Higher computational and dollar cost per audio second."
+      ],
+      "best_fit_use_case": "Long-form narration, audiobooks, character dialogue, non-barge-in voice agents."
+    },
+    "cartesia": {
+      "strengths": [
+        "Fastest pure model latency (99.2ms avg) and low warm TTFB (145.9ms).",
+        "Supports WebSocket cancellation via context continuation flags."
+      ],
+      "tradeoffs": [
+        "Perceptual MOS lower on complex multi-sentence paragraphs (4.16/5.0) \u2014 can sound slightly compressed.",
+        "More sensitive to network packet jitter under unbuffered WebRTC streaming."
+      ],
+      "best_fit_use_case": "Speed-critical conversational bots where vocal personality nuance is secondary to latency."
+    },
+    "openai": {
+      "strengths": [
+        "Universal availability with single API key, consistent reliable audio quality.",
+        "Clean number enunciation without phonetic normalization prerequisites."
+      ],
+      "tradeoffs": [
+        "HTTP/SSE streaming transport lacks bidirectional WebSocket control.",
+        "No per-word timestamp emission \u2014 impossible to build an exact heard-text ledger without external aligner.",
+        "Cannot purge server synthesis buffers on user barge-in."
+      ],
+      "best_fit_use_case": "General-purpose assistants, prototyping, asynchronous voice generation."
+    }
+  }
+}

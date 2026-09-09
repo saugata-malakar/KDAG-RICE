@@ -1,0 +1,41 @@
+item_id,category,provider_id,provider_name,blind_label,model_id,voice_name,transport,t_model_warm_ms,t_net_warm_ms,t_ttfb_warm_ms,t_ttfb_cold_ms,wer,cer,mos_quiet,mos_noisy_65db,intelligibility
+CORPUS-01,urgent_dispatch,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),112,38,150,342,0.0,0.0,4.42,4.33,4.83
+CORPUS-01,urgent_dispatch,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),210,65,275,580,0.0,0.0,4.75,4.17,4.67
+CORPUS-01,urgent_dispatch,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),88,45,133,310,0.0,0.0,4.25,4.17,4.75
+CORPUS-01,urgent_dispatch,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),185,75,260,460,0.0,0.0,4.33,4.08,4.58
+CORPUS-02,alphanumeric_codes,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),118,40,158,355,0.0,0.0,4.5,4.42,4.92
+CORPUS-02,alphanumeric_codes,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),225,68,293,610,0.06,0.02,4.67,4.08,4.5
+CORPUS-02,alphanumeric_codes,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),95,48,143,325,0.06,0.02,4.17,4.08,4.67
+CORPUS-02,alphanumeric_codes,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),195,80,275,485,0.0,0.0,4.25,4.0,4.5
+CORPUS-03,currency_and_time,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),125,39,164,360,0.0,0.0,4.33,4.25,4.75
+CORPUS-03,currency_and_time,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),230,70,300,625,0.0,0.0,4.58,4.0,4.58
+CORPUS-03,currency_and_time,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),102,46,148,335,0.0,0.0,4.08,4.0,4.58
+CORPUS-03,currency_and_time,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),205,78,283,495,0.0,0.0,4.25,3.92,4.5
+CORPUS-04,hesitation_pause,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),105,35,140,330,0.0,0.0,4.58,4.33,4.67
+CORPUS-04,hesitation_pause,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),195,62,257,560,0.0,0.0,4.83,4.25,4.75
+CORPUS-04,hesitation_pause,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),82,42,124,298,0.0,0.0,4.17,4.08,4.5
+CORPUS-04,hesitation_pause,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),178,72,250,445,0.0,0.0,4.17,3.92,4.42
+CORPUS-05,pitch_contour_interrobang,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),110,37,147,338,0.0,0.0,4.67,4.5,4.83
+CORPUS-05,pitch_contour_interrobang,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),205,64,269,575,0.0,0.0,4.75,4.17,4.67
+CORPUS-05,pitch_contour_interrobang,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),90,44,134,315,0.0,0.0,4.25,4.17,4.67
+CORPUS-05,pitch_contour_interrobang,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),182,74,256,455,0.0,0.0,4.33,4.0,4.58
+CORPUS-06,false_start_correction,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),120,41,161,352,0.0,0.0,4.42,4.25,4.75
+CORPUS-06,false_start_correction,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),218,67,285,595,0.0,0.0,4.67,4.08,4.58
+CORPUS-06,false_start_correction,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),98,47,145,328,0.0,0.0,4.17,4.0,4.58
+CORPUS-06,false_start_correction,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),190,76,266,472,0.0,0.0,4.17,3.92,4.5
+CORPUS-07,dense_multi_constraint,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),135,42,177,375,0.0,0.0,4.33,4.17,4.83
+CORPUS-07,dense_multi_constraint,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),245,72,317,640,0.0,0.0,4.5,3.92,4.5
+CORPUS-07,dense_multi_constraint,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),115,50,165,355,0.0,0.0,4.08,3.92,4.67
+CORPUS-07,dense_multi_constraint,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),215,82,297,510,0.0,0.0,4.17,3.83,4.42
+CORPUS-08,conversational_rapport,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),98,36,134,320,0.0,0.0,4.5,4.42,4.92
+CORPUS-08,conversational_rapport,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),188,60,248,545,0.0,0.0,4.83,4.33,4.83
+CORPUS-08,conversational_rapport,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),78,40,118,288,0.0,0.0,4.33,4.25,4.83
+CORPUS-08,conversational_rapport,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),170,70,240,435,0.0,0.0,4.42,4.17,4.67
+CORPUS-09,barge_in_target,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),130,40,170,368,0.0,0.0,4.25,4.17,4.75
+CORPUS-09,barge_in_target,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),250,75,325,660,0.0,0.0,4.42,3.92,4.42
+CORPUS-09,barge_in_target,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),110,48,158,348,0.0,0.0,4.0,3.92,4.5
+CORPUS-09,barge_in_target,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),220,85,305,525,0.0,0.0,4.08,3.83,4.33
+CORPUS-10,technical_jargon,rime,Rime Labs,Provider A,coda,astra,WebSocket (Bidirectional),142,44,186,385,0.05,0.02,4.33,4.25,4.67
+CORPUS-10,technical_jargon,elevenlabs,ElevenLabs,Provider B,eleven_turbo_v2_5,Rachel,WebSocket (Bidirectional),262,78,340,685,0.06,0.02,4.58,4.0,4.5
+CORPUS-10,technical_jargon,cartesia,Cartesia,Provider C,sonic-english,Katie,WebSocket (Bidirectional),125,52,177,370,0.05,0.02,4.17,4.08,4.58
+CORPUS-10,technical_jargon,openai,OpenAI (Industry Reference),Reference,tts-1,alloy,HTTP Chunked Streaming (SSE),235,88,323,550,0.0,0.0,4.25,4.0,4.5

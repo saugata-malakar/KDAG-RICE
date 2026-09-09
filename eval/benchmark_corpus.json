@@ -1,0 +1,77 @@
+{
+  "corpus_version": "1.0.0",
+  "evaluation_domain": "Real-Time Conversational Dispatch & Hands-Busy Voice Operations",
+  "selection_rationale": "Constructed to evaluate real-time turn-taking voice systems across 5 distinct dimensions: listening quality, text fidelity, latency, reliability, and controllability.",
+  "items": [
+    {
+      "id": "CORPUS-01",
+      "category": "urgent_dispatch",
+      "text": "Unit four, divert immediately to Highway 101 North at Exit 42. Code three response required.",
+      "challenge": "Short-turn urgency, alphanumeric highways and exit numbers, imperative tone.",
+      "target_eval": ["latency", "text_fidelity"]
+    },
+    {
+      "id": "CORPUS-02",
+      "category": "alphanumeric_codes",
+      "text": "Your flight UA-402 is departing from Gate B-18. Confirmation code is Bravo Kilo 7891.",
+      "challenge": "Separated phonetic alphanumeric sequences, gate letters, NATO phonetic alphabet.",
+      "target_eval": ["text_fidelity", "listening_quality"]
+    },
+    {
+      "id": "CORPUS-03",
+      "category": "currency_and_time",
+      "text": "The total fee comes to $1,450.50, due tomorrow by 18:45 local time.",
+      "challenge": "Spoken currency expansion with cents, 24-hour military time pronunciation.",
+      "target_eval": ["text_fidelity", "controllability"]
+    },
+    {
+      "id": "CORPUS-04",
+      "category": "hesitation_pause",
+      "text": "Let's see... checking database records now... table confirmed for party of four.",
+      "challenge": "Conversational thinking pauses (...) without triggering false end-of-speech silence detectors.",
+      "target_eval": ["listening_quality", "controllability"]
+    },
+    {
+      "id": "CORPUS-05",
+      "category": "pitch_contour_interrobang",
+      "text": "Wait, did the dispatch supervisor cancel that ambulance?! That cannot be right.",
+      "challenge": "Rising surprise pitch contour encoded via interrobang (?!), emotional urgency.",
+      "target_eval": ["listening_quality", "controllability"]
+    },
+    {
+      "id": "CORPUS-06",
+      "category": "false_start_correction",
+      "text": "Proceed straight to Pier 4-- actually, make that Pier 9, cargo bay three.",
+      "challenge": "Mid-sentence self-correction cadence via trail-off hyphen (--).",
+      "target_eval": ["listening_quality", "text_fidelity"]
+    },
+    {
+      "id": "CORPUS-07",
+      "category": "dense_multi_constraint",
+      "text": "Confirming three appointments: Tuesday at 9:00 AM, Wednesday at 2:15 PM, and Friday at 4:30 PM.",
+      "challenge": "Rhythm, pacing, breath control across multiple structured date and time constraints.",
+      "target_eval": ["listening_quality", "latency"]
+    },
+    {
+      "id": "CORPUS-08",
+      "category": "conversational_rapport",
+      "text": "Sure thing! I have got that noted down and will update the log for you right away.",
+      "challenge": "Warm, professional conversational cadence without robotic stiffness.",
+      "target_eval": ["listening_quality"]
+    },
+    {
+      "id": "CORPUS-09",
+      "category": "barge_in_target",
+      "text": "I am initiating the server backup protocol across all three primary storage volumes now and will notify you when finished.",
+      "challenge": "Long sentence (18 words) designed for mid-stream barge-in at word 4 ('server'). Tests protocol-level clear.",
+      "target_eval": ["controllability", "latency", "reliability"]
+    },
+    {
+      "id": "CORPUS-10",
+      "category": "technical_jargon",
+      "text": "The WebRTC gateway reports packet loss below 0.2% over TLS 1.3 with sub-fifty millisecond latency.",
+      "challenge": "Technical acronyms (WebRTC, TLS), decimal percentages, compound engineering terms.",
+      "target_eval": ["text_fidelity", "listening_quality"]
+    }
+  ]
+}
