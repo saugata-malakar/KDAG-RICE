@@ -8,7 +8,7 @@
 > **Empirical Evidence & Acceptance Criteria:** [`RIME_EVIDENCE.md`](RIME_EVIDENCE.md)
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Tests: 55/55 Passing](https://img.shields.io/badge/Tests-55%2F55%20Passing-brightgreen.svg)](tests/)
+[![Tests: 61/61 Passing](https://img.shields.io/badge/Tests-61%2F61%20Passing-brightgreen.svg)](tests/)
 [![Rime TTS: Coda / Astra (WS)](https://img.shields.io/badge/Rime%20TTS-Coda%20%2F%20Astra%20(WS)-orange.svg)](https://rime.ai)
 [![LiveKit Agents: 1.7.1](https://img.shields.io/badge/LiveKit-Agents%201.7.1-blue.svg)](https://livekit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -218,7 +218,7 @@ pytest + pytest-asyncio                        # Test framework (dev dependency)
 | **GitHub Repository** | [https://github.com/saugata-malakar/KDAG-RICE](https://github.com/saugata-malakar/KDAG-RICE) |
 | **Branch** | `main` (all commits on default branch) |
 | **Language** | Python 3.11+ |
-| **Total Test Coverage** | 55/55 tests passing across 8 test files |
+| **Total Test Coverage** | 61/61 tests passing across 9 test files |
 | **Benchmark Data** | 160 trials (80 per system), raw CSV committed |
 
 ### Working Demo Link
@@ -238,13 +238,14 @@ Every behavior shown in the demo exists in the source code and can be reproduced
 
 | Demonstrated Behavior | Source File | Reproduction Command |
 |---|---|---|
-| Barge-in halts audio instantly | [`agent/rime_ws_client.py`](agent/rime_ws_client.py) | `pytest tests/stress/test_rime_client.py -v` |
+| **Full-Duplex Rubric Proof** (fixed tool delay, barge-in, request change, audio cutoff, stale tool quarantine, grounded output) | [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) | `pytest tests/stress/test_full_duplex_proof.py -v` |
+| Barge-in halts audio instantly via WS clear | [`agent/rime_ws_client.py`](agent/rime_ws_client.py) | `pytest tests/stress/test_rime_client.py -v` |
 | Stale tool result is quarantined | [`agent/tool_executor.py`](agent/tool_executor.py) | `pytest tests/stress/test_tools.py -v` |
 | Heard-text grounding (no context poisoning) | [`agent/state_manager.py`](agent/state_manager.py) | `pytest tests/stress/test_state_manager.py -v` |
 | 0.0% stale rate vs 100% baseline | [`eval/run_benchmark.py`](eval/run_benchmark.py) | `python -m eval.run_benchmark` |
 | Monotonic fence under rapid interruptions | [`agent/fence.py`](agent/fence.py) | `pytest tests/stress/test_fence.py -v` |
 | End-to-end multi-turn scenarios | [`agent/pipeline.py`](agent/pipeline.py) | `pytest tests/stress/test_pipeline_scenarios.py -v` |
-| LiveKit session event wiring | [`agent/session.py`](agent/session.py) | `pytest tests/stress/test_session_wiring.py -v` |
+| LiveKit session event wiring & content setter | [`agent/session.py`](agent/session.py) | `pytest tests/stress/test_session_wiring.py -v` |
 | Pre-TTS text normalization | [`agent/text_normalize.py`](agent/text_normalize.py) | `pytest tests/stress/test_text_normalize.py -v` |
 
 ---
@@ -293,7 +294,7 @@ python preflight_check.py
 ```
 Validates all API keys, organizer-specified Rime configuration, and scans for accidentally committed secrets.
 
-### Step 4: Run the Full Test Suite (55/55 Passing)
+### Step 4: Run the Full Test Suite (61/61 Passing)
 ```bash
 pytest tests/ -v
 ```
@@ -379,7 +380,8 @@ python -m agent.session dev
 │   ├── test_live_interrupted_turn_livekit.py # Live WebSocket timestamp diagnostic
 │   ├── baselines/naive.py        # Unfenced baseline for comparison
 │   └── results/                  # benchmark_summary.json & benchmark_trials.csv
-├── tests/stress/                 # Unit & Stress Test Suite (55/55 Passing)
+├── tests/stress/                 # Unit & Stress Test Suite (61/61 Passing)
+│   ├── test_full_duplex_proof.py # Full-duplex rubric integration proof (tool delay + barge-in + change)
 │   ├── test_fence.py             # GenerationFence thread-safety & eviction
 │   ├── test_tools.py             # Tool execution & result fencing tests
 │   ├── test_state_manager.py     # Heard-text ledger & truncation tests
@@ -403,7 +405,7 @@ python -m agent.session dev
 | **Problem & Necessity of Voice** | 25% | Hands-busy workflow where removing speech destroys usability; solves context poisoning and stale tool bleed. | [`README.md §1`](#-1-problem--necessity-of-voice-judging-weight-25), [`RIME_EVIDENCE.md §1`](RIME_EVIDENCE.md) |
 | **Hard Voice Engineering** | 25% | Monotonic GenerationFence, event-driven tool cancellation (<= 0.08ms), protocol-level WebSocket buffer clearing. | [`agent/fence.py`](agent/fence.py), [`agent/tool_executor.py`](agent/tool_executor.py), [`docs/ARCHITECTURE_REPORT.md`](docs/ARCHITECTURE_REPORT.md) |
 | **Rime Integration & Experience** | 20% | Primary spoken output over WebSocket using `coda`/`astra`; per-word timestamp alignment; Writing for the Ear prompt engineering. | [`agent/session.py`](agent/session.py), [`agent/rime_ws_client.py`](agent/rime_ws_client.py), [`docs/PROSODY_ANALYSIS.md`](docs/PROSODY_ANALYSIS.md) |
-| **Evidence & Reproducibility** | 20% | 80-trial empirical benchmark with 0.0% stale rate vs 100.0% baseline; 55 passing tests; raw trial CSV committed; live diagnostic script; preflight checker. | [`eval/results/benchmark_summary.json`](eval/results/benchmark_summary.json), [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py), [`preflight_check.py`](preflight_check.py) |
+| **Evidence & Reproducibility** | 20% | 80-trial empirical benchmark with 0.0% stale rate vs 100.0% baseline; 61 passing tests; raw trial CSV committed; live diagnostic script; preflight checker. | [`eval/results/benchmark_summary.json`](eval/results/benchmark_summary.json), [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py), [`preflight_check.py`](preflight_check.py) |
 | **Demo Clarity** | 10% | LiveKit Agents Playground direct token access, 4-minute video recording blueprint, and interactive Visual HUD. | [`README.md §LIVE DEMO`](#-live-demo--judge-testing-instructions), [`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md), [`client/index.html`](client/index.html) |
 
 ---
