@@ -126,7 +126,7 @@ sequenceDiagram
 ## 4. State Machine Lifecycle
 
 ```mermaid
-state_diagram
+stateDiagram-v2
     [*] --> Idle: Session Started
     Idle --> Generating: User Speech Finished (ASR Final)
     Generating --> Speaking: Rime WS Audio Stream Starts
@@ -136,7 +136,7 @@ state_diagram
     Speaking --> Interrupted: User Barge-In Detected
     Generating --> Interrupted: User Barge-In Detected
     Interrupted --> Quarantined: In-flight Tools / LLM fenced
-    Quarantined --> Generating: New Turn (G_{n+1}) Grounded in Heard Prefix
+    Quarantined --> Generating: New Turn Grounded in Heard Prefix
 ```
 
 ---
