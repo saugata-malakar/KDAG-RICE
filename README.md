@@ -17,7 +17,20 @@
 
 ## LIVE DEMO & JUDGE TESTING INSTRUCTIONS
 
-Judges can test the live full-duplex agent immediately in the browser without deploying any local infrastructure:
+Judges can test the full-duplex agent immediately via multiple turnkey pathways:
+
+### Option 0: Single-Command Turnkey Demo (Zero Setup / Instant Out-of-the-Box)
+Judges can verify all claims, execute the defined acceptance test suite, and launch the Visual HUD immediately with zero external dependencies or API keys:
+```bash
+# 1-Command Acceptance Test Runner (Normal, Stress & Failure Cases + Empirical Metrics)
+python run_demo.py
+
+# Launch the Interactive Mission Control Visual Debug HUD directly in your browser:
+python run_demo.py --hud
+
+# Inspect synthesized pairwise prosody WAV clips (coda / astra):
+python run_demo.py --audio
+```
 
 ### Option 1: LiveKit Agents Playground (Interactive WebRTC Audio)
 1. **Open the Playground:** [https://agents-playground.livekit.io/](https://agents-playground.livekit.io/)
