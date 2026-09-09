@@ -1,4 +1,4 @@
-# RimeTrack 🎙️
+# RimeTrack
 ### Real-Time Interruption Recovery & Tool Fencing for Full-Duplex Voice Agents
 
 > **DataForge × Rime Hackathon Challenge (September 2026)**  
@@ -7,15 +7,10 @@
 > **Architecture & Research Paper:** [`docs/ARCHITECTURE_REPORT.md`](docs/ARCHITECTURE_REPORT.md) | [`docs/ARCHITECTURE_REPORT.tex`](docs/ARCHITECTURE_REPORT.tex)  
 > **Empirical Evidence & Acceptance Criteria:** [`RIME_EVIDENCE.md`](RIME_EVIDENCE.md)
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Tests: 76/76 Passing](https://img.shields.io/badge/Tests-76%2F76%20Passing-brightgreen.svg)](tests/)
-[![Rime TTS: Coda / Astra (WS)](https://img.shields.io/badge/Rime%20TTS-Coda%20%2F%20Astra%20(WS)-orange.svg)](https://rime.ai)
-[![LiveKit Agents: 1.7.1](https://img.shields.io/badge/LiveKit-Agents%201.7.1-blue.svg)](https://livekit.io)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 🚀 LIVE DEMO & JUDGE TESTING INSTRUCTIONS
+## LIVE DEMO & JUDGE TESTING INSTRUCTIONS
 
 Judges can test the live full-duplex agent immediately in the browser without deploying any local infrastructure:
 
@@ -42,11 +37,11 @@ Once connected, test the exact stress challenge defined in the hackathon brief:
    While the agent speaks or waits for the tool, interrupt clearly:  
    *"Wait, change that to 8:30 PM for four people!"*
 3. **Verify All 5 Hackathon Rubric Behaviors:**  
-   - ✅ **(1) Queued Rime audio stops promptly:** Spoken audio cuts off instantly ($\le 1\text{ms}$) via Rime WebSocket `{"operation": "clear", "contextId": "G1"}` frame. Un-spoken words are purged from server-side synthesis buffers.
-   - ✅ **(2) Updated instruction reaches the application:** The `GenerationFence` advances to `G2`, and the application immediately ingests the revised request without dropping audio or freezing.
-   - ✅ **(3) Stale tool results are NOT spoken as current:** The 7:00 PM booking finishes in the background, but the `ToolExecutor` checks `fence.is_stale("G1")`, marks the result `cancelled=True`, and **quarantines** it. It is never spoken aloud.
-   - ✅ **(4) Background work is cancelled or reconciled correctly:** Cancellable tools receive `asyncio.CancelledError` in $\le 0.08\text{ms}$. Uncancellable tools complete without state contamination.
-   - ✅ **(5) Final spoken response reflects heard & requested:** The agent confirms: *"Done! I have booked a table for four at Olive Garden at 8:30 PM."* The heard-text ledger guarantees that conversation context contains only audible words and the updated booking.
+   - **(1) Queued Rime audio stops promptly:** Spoken audio cuts off instantly ($\le 1\text{ms}$) via Rime WebSocket `{"operation": "clear", "contextId": "G1"}` frame. Un-spoken words are purged from server-side synthesis buffers.
+   - **(2) Updated instruction reaches the application:** The `GenerationFence` advances to `G2`, and the application immediately ingests the revised request without dropping audio or freezing.
+   - **(3) Stale tool results are NOT spoken as current:** The 7:00 PM booking finishes in the background, but the `ToolExecutor` checks `fence.is_stale("G1")`, marks the result `cancelled=True`, and **quarantines** it. It is never spoken aloud.
+   - **(4) Background work is cancelled or reconciled correctly:** Cancellable tools receive `asyncio.CancelledError` in $\le 0.08\text{ms}$. Uncancellable tools complete without state contamination.
+   - **(5) Final spoken response reflects heard & requested:** The agent confirms: *"Done! I have booked a table for four at Olive Garden at 8:30 PM."* The heard-text ledger guarantees that conversation context contains only audible words and the updated booking.
 4. **Full-Duplex Application Property:** Full duplex is treated as a property of the **complete application**, not the TTS model alone. The application continuously accepts user microphone audio while Rime speech is streaming and while background tools are executing.
 5. **Automated Verification:** Run the dedicated end-to-end integration test:
    ```bash
@@ -65,7 +60,7 @@ python -m demo.run_acceptance_demo
 
 ---
 
-## 🛡️ Hackathon Eligibility & Integrity Compliance Matrix
+## Hackathon Eligibility & Integrity Compliance Matrix
 
 Per the hackathon integrity guidelines, a submission is disqualified if it violates key eligibility constraints. The table below documents our strict adherence to every rule:
 
@@ -81,7 +76,7 @@ Per the hackathon integrity guidelines, a submission is disqualified if it viola
 
 ---
 
-## 🎯 1. Problem & Necessity of Voice (Judging Weight: 25%)
+## 1. Problem & Necessity of Voice (Judging Weight: 25%)
 
 ### 1.1 Start with the Voice Failure Mode
 Real-time conversational voice agents are not simply text chatbots with an audio wrapper—they operate under asynchronous physical constraints. When voice systems integrate background tools (APIs, databases, booking lookups) under full-duplex human speech, they encounter two severe, unaddressed failure modes upon user barge-in:
@@ -128,7 +123,7 @@ Rather than treating the hackathon's suggested areas as separate tracks, RimeTra
 
 ---
 
-## 🏗️ 2. System Architecture
+## 2. System Architecture
 
 ```mermaid
 flowchart TD
@@ -173,7 +168,7 @@ flowchart TD
 
 ---
 
-## 📊 3. Empirical Evidence & Reproducibility (Judging Weight: 20%)
+## 3. Empirical Evidence & Reproducibility (Judging Weight: 20%)
 
 We evaluated RimeTrack against the standard **Naive Baseline** across 80 empirical benchmark trials per system ($N_{total} = 160$ trials) across 4 distinct failure scenarios using [`eval/run_benchmark.py`](eval/run_benchmark.py):
 
@@ -189,21 +184,21 @@ We evaluated RimeTrack against the standard **Naive Baseline** across 80 empiric
 
 ---
 
-## ⚡ 4. Acceptance Criteria (Pre-Demo Contract)
+## 4. Acceptance Criteria (Pre-Demo Contract)
 
 | Criterion | What is Tested | Acceptance Condition | Verification File | Status |
 |---|---|---|---|:---:|
-| **AC-1: Heard-Text Grounding** | Barge-in mid-sentence during Rime speech playback | Next turn's prompt context contains **only the words the user actually heard** before the interrupt. | [`tests/stress/test_state_manager.py`](tests/stress/test_state_manager.py) | ✅ Verified |
-| **AC-2: Cancellable Tool Abort** | Barge-in while an async API call is in-flight | In-flight background task receives cancellation within $\le 0.08\text{ms}$; no stale audio is synthesized. | [`tests/stress/test_fence.py`](tests/stress/test_fence.py) | ✅ Verified |
-| **AC-3: Uncancellable Tool Fencing** | Fixed delay in an irreversible DB tool completes *after* interrupt | Tool finishes in background, but the result is **quarantined by the `GenerationFence`** and never spoken aloud. | [`tests/stress/test_tools.py`](tests/stress/test_tools.py) | ✅ Verified |
-| **AC-4: Monotonic Fence Integrity** | Rapid back-to-back user barge-ins ($\le 10\text{ms}$) | Only latest generation $G_N$ is current; zero crosstalk or state bleed across turn ledgers. | [`tests/stress/test_fence.py`](tests/stress/test_fence.py) | ✅ Verified |
-| **AC-5: Protocol-Level WS Clearing** | Interruption during active Rime WebSocket synthesis | Explicit `{"operation": "clear", "contextId": ...}` is sent over Rime WebSocket to clear server buffers. | [`tests/stress/test_rime_client.py`](tests/stress/test_rime_client.py) | ✅ Verified |
-| **AC-6: ChatMessage Content Mutation** | `ChatMessage.content = [turn.text]` mutation target | Safely updates underlying `list[ChatContent]`, eliminating LiveKit setter failure and grounding `session.history`. | [`tests/stress/test_session_wiring.py`](tests/stress/test_session_wiring.py) | ✅ Verified |
-| **Rubric Proof: Full-Duplex Interruption & Tool Delay** | Fixed 3.0s tool delay, barge-in mid-speech/wait, changed request | Audio cuts off, 7pm booking quarantined, 8:30pm booking executed, final response reflects heard & requested. | [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) | ✅ Verified |
+| **AC-1: Heard-Text Grounding** | Barge-in mid-sentence during Rime speech playback | Next turn's prompt context contains **only the words the user actually heard** before the interrupt. | [`tests/stress/test_state_manager.py`](tests/stress/test_state_manager.py) | Verified |
+| **AC-2: Cancellable Tool Abort** | Barge-in while an async API call is in-flight | In-flight background task receives cancellation within $\le 0.08\text{ms}$; no stale audio is synthesized. | [`tests/stress/test_fence.py`](tests/stress/test_fence.py) | Verified |
+| **AC-3: Uncancellable Tool Fencing** | Fixed delay in an irreversible DB tool completes *after* interrupt | Tool finishes in background, but the result is **quarantined by the `GenerationFence`** and never spoken aloud. | [`tests/stress/test_tools.py`](tests/stress/test_tools.py) | Verified |
+| **AC-4: Monotonic Fence Integrity** | Rapid back-to-back user barge-ins ($\le 10\text{ms}$) | Only latest generation $G_N$ is current; zero crosstalk or state bleed across turn ledgers. | [`tests/stress/test_fence.py`](tests/stress/test_fence.py) | Verified |
+| **AC-5: Protocol-Level WS Clearing** | Interruption during active Rime WebSocket synthesis | Explicit `{"operation": "clear", "contextId": ...}` is sent over Rime WebSocket to clear server buffers. | [`tests/stress/test_rime_client.py`](tests/stress/test_rime_client.py) | Verified |
+| **AC-6: ChatMessage Content Mutation** | `ChatMessage.content = [turn.text]` mutation target | Safely updates underlying `list[ChatContent]`, eliminating LiveKit setter failure and grounding `session.history`. | [`tests/stress/test_session_wiring.py`](tests/stress/test_session_wiring.py) | Verified |
+| **Rubric Proof: Full-Duplex Interruption & Tool Delay** | Fixed 3.0s tool delay, barge-in mid-speech/wait, changed request | Audio cuts off, 7pm booking quarantined, 8:30pm booking executed, final response reflects heard & requested. | [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) | Verified |
 
 ---
 
-## 🔊 5. Rime Integration & Voice Experience (Judging Weight: 20%)
+## 5. Rime Integration & Voice Experience (Judging Weight: 20%)
 
 * **Production Model & Speaker:** `coda` model with `astra` speaker, configured for natural, conversational prosody (`speed_alpha=1.0`).
 * **Transport:** Full-duplex WebSocket streaming (`use_websocket=True`) to enable mid-stream cancellation and per-word timestamp alignment.
@@ -214,7 +209,7 @@ We evaluated RimeTrack against the standard **Naive Baseline** across 80 empiric
 
 ---
 
-## 🔬 6. TTS Comparative Benchmark: Rime vs. Alternative Providers
+## 6. TTS Comparative Benchmark: Rime vs. Alternative Providers
 
 > **Research Paper & Methodology:** [`docs/TTS_COMPARATIVE_STUDY.md`](docs/TTS_COMPARATIVE_STUDY.md)  
 > **Evaluation Corpus:** [`eval/benchmark_corpus.json`](eval/benchmark_corpus.json) (10 items across 5 conversational domains)  
@@ -254,7 +249,7 @@ To ensure rigorous evaluation, we compared **Rime Labs** against two leading rea
 
 ---
 
-## 🔧 7. Exact Rime Configuration
+## 7. Exact Rime Configuration
 
 The following table specifies every Rime parameter used in production. These values are locked in [`agent/session.py`](agent/session.py) and validated by [`preflight_check.py`](preflight_check.py):
 
@@ -288,7 +283,7 @@ def build_rime_tts() -> rime.TTS:
 
 ---
 
-## 🌐 8. Third-Party Services & Dependencies
+## 8. Third-Party Services & Dependencies
 
 | Service | Role | Version / Model | Required? | Fallback |
 |---|---|---|:---:|---|
@@ -327,7 +322,7 @@ Per the hackathon rule (*"Rime provides text-to-speech. Your application remains
 
 ---
 
-## 🖥️ 9. Working Code & Demo
+## 9. Working Code & Demo
 
 ### Source Repository
 **All demonstrated behavior exists in this repository and can be reproduced by judges.**
@@ -373,7 +368,7 @@ Every behavior shown in the demo exists in the source code and can be reproduced
 
 ---
 
-## 🛠️ 10. Setup Instructions & Local Reproduction
+## 10. Setup Instructions & Local Reproduction
 
 ### Step 1: Clone & Install
 ```bash
@@ -459,7 +454,7 @@ python -m agent.session dev
 
 ---
 
-## ⚠️ 11. Known Limitations & Failure Behavior
+## 11. Known Limitations & Failure Behavior
 
 ### Known Limitations
 
@@ -498,7 +493,7 @@ Per hackathon judging rules, the system explicitly defines its operating envelop
 
 ---
 
-## 📁 12. Repository Structure
+## 12. Repository Structure
 
 ```
 ├── docs/
@@ -556,7 +551,7 @@ Per hackathon judging rules, the system explicitly defines its operating envelop
 
 ---
 
-## 📋 13. Judging Criteria Alignment Matrix
+## 13. Judging Criteria Alignment Matrix
 
 | Hackathon Criterion | Weight | How RimeTrack Excels | Supporting Evidence |
 |---|:---:|---|---|
@@ -568,6 +563,6 @@ Per hackathon judging rules, the system explicitly defines its operating envelop
 
 ---
 
-## ⚖️ License
+## License
 MIT License. Built for the DataForge × Rime Hackathon Challenge (2026).
 

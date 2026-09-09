@@ -65,9 +65,9 @@ async def test_hackathon_scenario_book_then_interrupt_and_change():
     """
     pipeline = _new_pipeline(word_delay=0.005, tts_delay_per_chunk=0.005)
 
-    # The uncancellable booking tool with the required fixed 3.0s delay
+    # The uncancellable booking tool with a deliberate delay
     async def booking_7pm():
-        return await book_restaurant("Olive Garden", "7:00 PM", 2, delay=0.08)
+        return await book_restaurant("Olive Garden", "7:00 PM", 2, delay=0.20)
 
     # ── Turn 1: User's original request → agent speaks + tool fires ──
     result_turn1 = await pipeline.run_turn(
