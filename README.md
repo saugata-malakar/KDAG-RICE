@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/rimetrack_logo.png" alt="RimeTrack Hero Logo" width="100%" />
+</p>
+
 # RimeTrack
 ### Real-Time Interruption Recovery & Tool Fencing for Full-Duplex Voice Agents
 
@@ -7,6 +11,7 @@
 > **Architecture & Research Paper:** [`docs/ARCHITECTURE_REPORT.md`](docs/ARCHITECTURE_REPORT.md) | [`docs/ARCHITECTURE_REPORT.tex`](docs/ARCHITECTURE_REPORT.tex)  
 > **Empirical Evidence & Acceptance Criteria:** [`RIME_EVIDENCE.md`](RIME_EVIDENCE.md)
 
+**Environment & Verification:** Python 3.11+ | 76/76 Tests Passing | Rime TTS Coda/Astra (WS) | LiveKit Agents 1.7.1 | MIT License
 
 ---
 
