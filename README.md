@@ -83,18 +83,48 @@ Per the hackathon integrity guidelines, a submission is disqualified if it viola
 
 ## 🎯 1. Problem & Necessity of Voice (Judging Weight: 25%)
 
-In hands-busy, accessibility-focused, and operational workflows (emergency dispatch, field medicine, air logistics, table booking), voice interaction is **essential**—removing speech destroys product utility.
+### 1.1 Start with the Voice Failure Mode
+Real-time conversational voice agents are not simply text chatbots with an audio wrapper—they operate under asynchronous physical constraints. When voice systems integrate background tools (APIs, databases, booking lookups) under full-duplex human speech, they encounter two severe, unaddressed failure modes upon user barge-in:
 
-Standard conversational voice agents suffer from two catastrophic failure modes upon interruption:
-1. **Context Poisoning (Hallucinated Grounding):** When an agent is interrupted mid-utterance, standard LLM histories append the *full generated text* instead of the *heard-text prefix*. The agent hallucinates that the user heard information that was never spoken.
-2. **Stale Tool Bleed (Phantom Side Effects):** When a slow background tool (e.g., reservation write, order dispatch) completes *after* the user interrupted to change their request, standard frameworks unconditionally apply the stale tool output to conversational state and speak the obsolete confirmation aloud.
+1. **Context Poisoning (Hallucinated Grounding):**  
+   When an agent is interrupted mid-utterance, standard voice pipelines stop local speaker playback, but append the *full generated text* $G(t)$ to the conversation history instead of the *heard-text prefix* $H(t)$. The LLM's next turn hallucinates that the user heard the entire response. If the agent planned to say *"I have reserved table four at seven p.m. Please note there is a 50 dollar cancellation penalty,"* and the user interrupted at *"table four"*, subsequent turns act as though the user was warned of the \$50 fee, poisoning conversational trust.
+   $$\text{Context Drift Gap} = G(t) \setminus H(t) \ne \emptyset$$
 
-### RimeTrack's Core Solution:
-* **`GenerationFence` (`agent/fence.py`):** Monotonically increasing generation IDs (`G1`, `G2`, ...) gate all in-flight LLM tokens and tool execution results at the exact boundary of re-entry into shared conversation state.
-* **Heard-Text Ledger (`agent/state_manager.py`):** Grounded directly in Rime's real-time per-word timestamp alignment over WebSocket (`push_timed_transcript`), recording strictly what reached audible playback before the interruption cut.
-* **Protocol-Level Clear Operation (`agent/rime_ws_client.py`):** Binds to Rime's WebSocket wire protocol, transmitting `{"operation": "clear", "contextId": ...}` to immediately flush server-side synthesis buffers upon barge-in.
-* **Sub-Millisecond Tool Cancellation (`agent/tool_executor.py`):** Event-driven cancellation replaces CPU polling loops, aborting in-flight tasks in <= 0.08ms.
-* **LiveKit ChatContext Mutation:** Safely updates `item.content = [turn.text]` on `ChatMessage` models, eliminating silent setter failures and guaranteeing grounding in `session.history`.
+2. **Stale Tool Bleed (Phantom Side Effects):**  
+   When a slow background tool (e.g., a 3-second database write, flight status poll, or dispatch lock) completes *after* the user interrupted to change their request, existing frameworks unconditionally inject the stale tool output into state and speak the obsolete confirmation aloud. The user says: *"Wait, make that 8:30 PM for four!"*, yet two seconds later the agent interrupts them to say: *"Your table for two at 7:00 PM is confirmed."*
+
+---
+
+### 1.2 Choose a Product Where Solving It Matters: Hands-Busy Field Operations
+A focused product with one convincingly solved voice problem is vastly superior to a shallow multi-feature assistant. RimeTrack is engineered specifically for **Hands-Busy Field Operations & Emergency Dispatch** (flight operations, emergency medical transit, tactical field logistics, high-throughput reservation dispatch):
+
+* **Why Voice is Strictly Necessary:** Drivers, pilots, triage medics, and warehouse operators have their **eyes on the terrain and hands on the equipment**. Using a physical screen or mobile keyboard is dangerous, illegal, or physically impossible. Removing voice completely destroys product utility.
+* **Why Interruption & State Fencing Are Non-Negotiable:** In high-consequence operational tasks, operators frequently change parameters mid-breath under shifting real-world constraints (*"Divert to alternate runway... wait, ground control says Runway 9 is clear!"*). A voice system that suffers stale tool bleed or context poisoning causes duplicate bookings, contradictory flight manifests, or mission-critical dispatch failures.
+
+---
+
+### 1.3 Review of Voice AI with Rime Builder Catalog & Architectural Differentiation
+Before building RimeTrack, we analyzed existing voice agents in the Rime and LiveKit builder ecosystems:
+* **The Builder Catalog Baseline:** Most existing projects in the catalog (e.g., sample customer service bots, Qwen Audio Agent references, basic voice overlays) implement simple half-duplex turn-taking or naive local audio muting upon interruption.
+* **The Architectural Gap:** In standard implementations, stopping local audio does **not** stop server-side Rime WebSocket synthesis queues, does **not** cancel in-flight async tools, does **not** quarantine stale results, and does **not** synchronize the LLM's conversation history with what was actually heard.
+* **RimeTrack's Extension & Innovation:** RimeTrack treats full-duplex as a property of the **complete end-to-end application**, not the TTS engine alone. By binding Rime's protocol-level `{"operation": "clear"}` frame to a monotonic `GenerationFence` and `ConversationStateManager`, RimeTrack eliminates stale tool bleed and context poisoning at the microsecond level.
+
+---
+
+### 1.4 Synthesis Across the Hackathon's 8 Strategic Directions
+
+Rather than treating the hackathon's suggested areas as separate tracks, RimeTrack synthesizes them into a unified, high-integrity architecture:
+
+| # | Hackathon Strategic Direction | How RimeTrack Addresses & Solves It | Key Code Reference |
+|:---:|---|---|---|
+| **1** | **Perceived Response Time** | Decomposes latency across the full path ($t_{stt} + t_{llm} + t_{model} + t_{net}$). Leverages Rime Coda's pooled WebSocket for **158.8ms warm TTFB** (83% faster than ElevenLabs). | [`eval/tts_comparative_benchmark.py`](eval/tts_comparative_benchmark.py), [`docs/TTS_COMPARATIVE_STUDY.md`](docs/TTS_COMPARATIVE_STUDY.md) |
+| **2** | **Interruption & Recovery** | Monotonic `GenerationFence` purges queued Rime audio via WebSocket `clear` frame in $\le 1.0\text{ms}$; grounds next turn in strictly heard text $H(t)$. | [`agent/fence.py`](agent/fence.py), [`agent/rime_ws_client.py`](agent/rime_ws_client.py), [`agent/state_manager.py`](agent/state_manager.py) |
+| **3** | **Conversation Continuity During Tools** | Continuous mic input while tools run. Injected 3.0s delay stress challenge proves background tools are either cancelled in $\le 0.08\text{ms}$ or quarantined with 0 stale words spoken. | [`agent/tool_executor.py`](agent/tool_executor.py), [`agent/tools.py`](agent/tools.py), [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) |
+| **4** | **Pronunciation & Controlled Delivery** | Full compliance with Brooke Larson's *Writing for the Ear*. Holds `coda`/`astra` constant, renders 4 text variant pairs, saves WAV clips, and evaluates `?!`, `...`, and `--`. | [`agent/text_normalize.py`](agent/text_normalize.py), [`eval/generate_prosody_clips.py`](eval/generate_prosody_clips.py), [`docs/PROSODY_ANALYSIS.md`](docs/PROSODY_ANALYSIS.md) |
+| **5** | **Multilingual & Code-Switched Speech** | Tests production language combination (`eng` General American) from Rime's live catalog. Documents clear boundary conditions and graceful 8-word fallback. | [`agent/session.py`](agent/session.py), [`agent/prompts.py`](agent/prompts.py), [`tests/stress/test_shipped_path.py`](tests/stress/test_shipped_path.py) |
+| **6** | **Telephony & Adverse Audio Conditions** | Pre-TTS domain normalization handles alphanumeric callsigns (`UA-402`), times (`7:00 p.m.`), and currency. Discloses acoustic bounds ($\text{SNR} \ge 12\text{dB}$, $110\text{--}190\text{ wpm}$). | [`agent/text_normalize.py`](agent/text_normalize.py), [`tests/stress/test_text_normalize.py`](tests/stress/test_text_normalize.py) |
+| **7** | **Expressive & Persistent Voice Identity** | Persona guided by concise, hands-busy operational protocols (1-2 sentences). Voice identity (`coda`/`astra`) remains consistent across all turns and recovery events. | [`agent/prompts.py`](agent/prompts.py), [`agent/session.py:build_rime_tts()`](agent/session.py) |
+| **8** | **Evaluation & Observability** | Interactive Developer Visual HUD (`client/index.html`), 80-trial empirical benchmark, 4-provider comparative benchmark, turnkey acceptance demo, and 76 unit tests. | [`client/index.html`](client/index.html), [`demo/run_acceptance_demo.py`](demo/run_acceptance_demo.py), [`eval/run_benchmark.py`](eval/run_benchmark.py) |
 
 ---
 
