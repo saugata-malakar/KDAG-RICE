@@ -3,7 +3,7 @@
 
 > **DataForge × Rime Hackathon Challenge (September 2026)**  
 > **Primary Voice Provider:** Rime Labs WebSocket Neural TTS (`coda` / `astra` / `eng`)  
-> **Official Repository:** [https://github.com/saugata-malakar/KDAG-RICE](https://github.com/saugata-malakar/KDAG-RICE)  
+> **Official Repository:** [https://github.com/saugata-malakar/KDAG-RIME](https://github.com/saugata-malakar/KDAG-RIME)  
 > **Architecture & Research Paper:** [`docs/ARCHITECTURE_REPORT.md`](docs/ARCHITECTURE_REPORT.md) | [`docs/ARCHITECTURE_REPORT.tex`](docs/ARCHITECTURE_REPORT.tex)  
 > **Empirical Evidence & Acceptance Criteria:** [`RIME_EVIDENCE.md`](RIME_EVIDENCE.md)
 
@@ -265,7 +265,7 @@ pytest + pytest-asyncio                        # Test framework (dev dependency)
 
 | What | Link |
 |---|---|
-| **GitHub Repository** | [https://github.com/saugata-malakar/KDAG-RICE](https://github.com/saugata-malakar/KDAG-RICE) |
+| **GitHub Repository** | [https://github.com/saugata-malakar/KDAG-RIME](https://github.com/saugata-malakar/KDAG-RIME) |
 | **Branch** | `main` (all commits on default branch) |
 | **Language** | Python 3.11+ |
 | **Total Test Coverage** | 66/66 tests passing across 10 test files |
@@ -307,8 +307,8 @@ Every behavior shown in the demo exists in the source code and can be reproduced
 
 ### Step 1: Clone & Install
 ```bash
-git clone https://github.com/saugata-malakar/KDAG-RICE.git
-cd KDAG-RICE
+git clone https://github.com/saugata-malakar/KDAG-RIME.git
+cd KDAG-RIME
 
 # Create virtual environment
 python -m venv .venv

@@ -3,7 +3,7 @@
 **Project:** RimeTrack — Real-Time Interruption Recovery & Tool Fencing for Full-Duplex Voice Agents  
 **Hackathon:** DataForge × Rime Hackathon Challenge (September 2026)  
 **Active Speech Provider:** Rime TTS over WebSocket (`coda` / `astra` / `eng` / `speed_alpha=1.0`)  
-**Repository:** [https://github.com/saugata-malakar/KDAG-RICE](https://github.com/saugata-malakar/KDAG-RICE)  
+**Repository:** [https://github.com/saugata-malakar/KDAG-RIME](https://github.com/saugata-malakar/KDAG-RIME)  
 **Date:** September 2026  
 
 ---
@@ -344,8 +344,8 @@ if speech_handle.interrupted and audio_output is not None:
 ### Step 1: Environment Setup
 ```bash
 # Clone the repository
-git clone https://github.com/saugata-malakar/KDAG-RICE.git
-cd KDAG-RICE
+git clone https://github.com/saugata-malakar/KDAG-RIME.git
+cd KDAG-RIME
 
 # Install dependencies
 pip install -e ".[dev]"
