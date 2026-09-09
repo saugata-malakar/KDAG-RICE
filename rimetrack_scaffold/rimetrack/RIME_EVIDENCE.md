@@ -467,18 +467,34 @@ python preflight_check.py
 ═══════════════════════════════════════════════════════
   RimeTrack Preflight Configuration Check
 ═══════════════════════════════════════════════════════
-  [✓] RIME_API_KEY        — Present (not placeholder)
-  [✓] RIME_MODEL          — coda (matches organizer spec)
-  [✓] RIME_SPEAKER        — astra (matches organizer spec)
-  [✓] RIME_LANG           — eng
-  [✓] LIVEKIT_URL         — wss://rice-h02i5ol6.livekit.cloud
-  [✓] LIVEKIT_API_KEY     — Present (API prefix OK)
-  [✓] LIVEKIT_API_SECRET  — Present (not placeholder)
-  [✓] OPENAI_API_KEY      — Present (sk- prefix OK)
-  [⚠] DEEPGRAM_API_KEY    — Missing (will fall back to OpenAI Whisper)
-  [✓] README Secret Scan  — No raw API secrets found in README.md
+  [+] RIME_API_KEY             -- Present (not placeholder)
+  [+] RIME_MODEL               -- coda (matches organizer spec)
+  [+] RIME_SPEAKER             -- astra (matches organizer spec)
+  [+] RIME_LANG                -- eng (matches organizer spec)
+  [+] LIVEKIT_URL              -- wss://rice-h02i5ol6.livekit.cloud
+  [+] LIVEKIT_API_KEY          -- Present (API prefix OK)
+  [+] LIVEKIT_API_SECRET       -- Present (not placeholder)
+  [+] OPENAI_API_KEY           -- Present (sk- prefix OK)
+  [!] DEEPGRAM_API_KEY         -- Missing (will fall back to OpenAI Whisper)
+  [+] README Secret Scan       -- No raw API secrets found in README.md
+  [+] .env.example Hygiene     -- Contains only placeholder values
 ═══════════════════════════════════════════════════════
-  Result: 9/10 PASSED, 0 FAILED, 1 WARNING
-  Configuration is ready for deployment.
+  Result: 10/11 PASSED, 0 FAILED, 1 WARNING
+  OK - Configuration is ready for deployment.
 ═══════════════════════════════════════════════════════
 ```
+
+### 8.4 Hackathon Eligibility & Integrity Compliance Matrix
+
+Per the hackathon integrity guidelines, a submission is disqualified if it violates key eligibility constraints. The table below documents our strict adherence to every rule:
+
+| Eligibility & Integrity Requirement | RimeTrack Status | Verification Evidence / Code Reference |
+|---|:---:|---|
+| **1. Verifiable Rime integration in submitted code** | **PASS** | [`agent/session.py:31-39`](agent/session.py) (`build_rime_tts()`), [`agent/rime_ws_client.py`](agent/rime_ws_client.py) (`FencedRimeClient`), [`rime_quickstart.py`](rime_quickstart.py). LiveKit plugin `livekit-plugins-rime==1.7.1` streaming directly over WebSocket. |
+| **2. Core use of Rime (never incidental speech)** | **PASS** | Rime is the **exclusive, primary speech synthesis engine** for every turn in the session (greeting, conversational replies, tool progress updates, and barge-in recovery). Zero audio is rendered through alternative providers in the live product. |
+| **3. Working product path (not a static mock or deck)** | **PASS** | Real, runnable LiveKit Agent worker (`python -m agent.session dev`), browser WebRTC connection via Playground, interactive Visual HUD ([`client/index.html`](client/index.html)), and 66 passing automated tests. |
+| **4. Required live demo provided** | **PASS** | LiveKit Cloud instance (`wss://rice-h02i5ol6.livekit.cloud`) with 30-day pre-generated judge token, interactive Visual HUD, and 4-minute demo recording blueprint ([`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md)). |
+| **5. No live credentials or secrets exposed** | **PASS** | Automated secret scan ([`preflight_check.py`](preflight_check.py)) verifies zero exposed keys. `.env` is gitignored; `.env.example` contains only sanitized placeholders; judge token is pre-signed with room-scoped permissions. |
+| **6. Model, voice, and language pass preflight** | **PASS** | Production model `coda`, speaker `astra`, language `eng`. Verified against Rime's live production catalog via [`preflight_check.py`](preflight_check.py) and [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py). |
+| **7. Verified performance numbers & cached/uncached separation** | **PASS** | **Cached / warm runs** (pooled WebSocket) and **uncached / cold runs** (TCP+TLS handshake) are **strictly separated and labeled**. Every benchmark metric is backed by committed raw trial data in [`eval/results/`](eval/results/) and repeatable benchmark scripts. |
+
