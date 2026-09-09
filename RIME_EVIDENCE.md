@@ -47,12 +47,13 @@ An implementation **PASSES** the full acceptance test if and only if **all six c
 
 ## 3. Test Procedure & Evaluation Methodology
 
-### 3.1 Automated Test Suite (66/66 Passing)
+### 3.1 Automated Test Suite (71/71 Passing)
 
-The test suite validates all six acceptance criteria across 10 test files with 66 individual test cases:
+The test suite validates all six acceptance criteria across 11 test files with 71 individual test cases:
 
 | Test File | Tests | What It Verifies | Acceptance Criteria |
 |---|:---:|---|:---:|
+| [`tests/stress/test_shipped_path.py`](tests/stress/test_shipped_path.py) | 5 | **Shipped Path & Production Rules:** Live catalog verification (`coda`/`astra`/`eng`), exact endpoint (`wss://users-ws.rime.ai/ws3`), audio format (`pcm_s16le` 24kHz), runtime fallback observability event, operational brevity & synthetic data protocols | AC-5, Build Rules |
 | [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) | 6 | **Direct Rubric Proof:** Fixed delay tool call interrupted mid-speech, changed request, audio cutoff, stale tool quarantine, updated instruction execution, sub-ms cancel latency, triple barge-in | AC-1 through AC-5 |
 | [`tests/stress/test_tts_comparative.py`](tests/stress/test_tts_comparative.py) | 5 | **Multi-TTS Comparative Suite:** Corpus structure (10 items), provider specs (Rime, ElevenLabs, Cartesia, OpenAI), latency decomposition ($t_{model}$ vs $t_{net}$), wire-level clear differentiation, trade-off completeness | Comparative Track |
 | [`tests/stress/test_fence.py`](tests/stress/test_fence.py) | 11 | Monotonic ID generation, thread-safety, rapid interruptions, sliding-window eviction, cancellable/uncancellable tool gating | AC-2, AC-3, AC-4 |
@@ -76,7 +77,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 **Expected output:**
 ```
-====== 66 passed, 3 warnings in ~10s ======
+====== 71 passed, 3 warnings in ~9s ======
 ```
 
 ### 3.2 Empirical Benchmark Suite (80 Trials per System, 160 Total)
@@ -361,7 +362,7 @@ python preflight_check.py
 ```
 This validates all required environment variables, API key formats, and Rime configuration before running any tests.
 
-### Step 3: Run Full Test Suite (55/55 Passing)
+### Step 3: Run Full Test Suite (71/71 Passing)
 ```bash
 $env:PYTHONPATH = "."    # PowerShell
 python -m pytest tests/ -v
@@ -492,7 +493,7 @@ Per the hackathon integrity guidelines, a submission is disqualified if it viola
 |---|:---:|---|
 | **1. Verifiable Rime integration in submitted code** | **PASS** | [`agent/session.py:31-39`](agent/session.py) (`build_rime_tts()`), [`agent/rime_ws_client.py`](agent/rime_ws_client.py) (`FencedRimeClient`), [`rime_quickstart.py`](rime_quickstart.py). LiveKit plugin `livekit-plugins-rime==1.7.1` streaming directly over WebSocket. |
 | **2. Core use of Rime (never incidental speech)** | **PASS** | Rime is the **exclusive, primary speech synthesis engine** for every turn in the session (greeting, conversational replies, tool progress updates, and barge-in recovery). Zero audio is rendered through alternative providers in the live product. |
-| **3. Working product path (not a static mock or deck)** | **PASS** | Real, runnable LiveKit Agent worker (`python -m agent.session dev`), browser WebRTC connection via Playground, interactive Visual HUD ([`client/index.html`](client/index.html)), and 66 passing automated tests. |
+| **3. Working product path (not a static mock or deck)** | **PASS** | Real, runnable LiveKit Agent worker (`python -m agent.session dev`), browser WebRTC connection via Playground, interactive Visual HUD ([`client/index.html`](client/index.html)), and 71 passing automated tests. |
 | **4. Required live demo provided** | **PASS** | LiveKit Cloud instance (`wss://rice-h02i5ol6.livekit.cloud`) with 30-day pre-generated judge token, interactive Visual HUD, and 4-minute demo recording blueprint ([`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md)). |
 | **5. No live credentials or secrets exposed** | **PASS** | Automated secret scan ([`preflight_check.py`](preflight_check.py)) verifies zero exposed keys. `.env` is gitignored; `.env.example` contains only sanitized placeholders; judge token is pre-signed with room-scoped permissions. |
 | **6. Model, voice, and language pass preflight** | **PASS** | Production model `coda`, speaker `astra`, language `eng`. Verified against Rime's live production catalog via [`preflight_check.py`](preflight_check.py) and [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py). |

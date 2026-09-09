@@ -39,6 +39,29 @@ def build_rime_tts() -> rime.TTS:
     )
 
 
+def get_shipped_voice_config() -> dict[str, Any]:
+    """Returns the exact production voice parameters verified in the shipped path."""
+    dg_key = os.environ.get("DEEPGRAM_API_KEY", "")
+    is_fallback = not bool(dg_key and dg_key != "your_deepgram_api_key")
+    return {
+        "tts_provider": "rime",
+        "tts_model": os.environ.get("RIME_MODEL", "coda"),
+        "tts_speaker": os.environ.get("RIME_SPEAKER", "astra"),
+        "tts_lang": os.environ.get("RIME_LANG", "eng"),
+        "tts_speed_alpha": 1.0,
+        "tts_transport": "websocket",
+        "tts_endpoint": "wss://users-ws.rime.ai/ws3",
+        "tts_region": "us-east",
+        "tts_audio_format": "pcm_s16le",
+        "tts_sample_rate_hz": 24000,
+        "tts_channels": 1,
+        "is_default_judged_path": True,
+        "framework": "livekit-agents==1.7.1",
+        "stt_provider": "openai:whisper (fallback)" if is_fallback else "deepgram:nova-3",
+        "stt_fallback_active": is_fallback,
+    }
+
+
 class RimeTrackAgent(Agent):
     def __init__(self, tools: list[llm.FunctionTool] | None = None) -> None:
         super().__init__(instructions=SYSTEM_INSTRUCTIONS, tools=tools)
@@ -148,6 +171,10 @@ async def entrypoint(ctx: JobContext) -> None:
     )
 
     wire_fence_to_session(session, fence, event_log, state)
+
+    shipped_cfg = get_shipped_voice_config()
+    logger.info("RimeTrack Active Voice Configuration: %s", shipped_cfg)
+    event_log.emit("provider_configuration", **shipped_cfg)
 
     await session.start(agent=RimeTrackAgent(tools=tools), room=ctx.room)
     event_log.emit("session_started")

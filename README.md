@@ -8,7 +8,7 @@
 > **Empirical Evidence & Acceptance Criteria:** [`RIME_EVIDENCE.md`](RIME_EVIDENCE.md)
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Tests: 66/66 Passing](https://img.shields.io/badge/Tests-66%2F66%20Passing-brightgreen.svg)](tests/)
+[![Tests: 71/71 Passing](https://img.shields.io/badge/Tests-71%2F71%20Passing-brightgreen.svg)](tests/)
 [![Rime TTS: Coda / Astra (WS)](https://img.shields.io/badge/Rime%20TTS-Coda%20%2F%20Astra%20(WS)-orange.svg)](https://rime.ai)
 [![LiveKit Agents: 1.7.1](https://img.shields.io/badge/LiveKit-Agents%201.7.1-blue.svg)](https://livekit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -66,7 +66,7 @@ Per the hackathon integrity guidelines, a submission is disqualified if it viola
 |---|:---:|---|
 | **1. Verifiable Rime integration in submitted code** | **PASS** | [`agent/session.py:31-39`](agent/session.py) (`build_rime_tts()`), [`agent/rime_ws_client.py`](agent/rime_ws_client.py) (`FencedRimeClient`), [`rime_quickstart.py`](rime_quickstart.py). LiveKit plugin `livekit-plugins-rime==1.7.1` streaming directly over WebSocket. |
 | **2. Core use of Rime (never incidental speech)** | **PASS** | Rime is the **exclusive, primary speech synthesis engine** for every turn in the session (greeting, conversational replies, tool progress updates, and barge-in recovery). Zero audio is rendered through alternative providers in the live product. |
-| **3. Working product path (not a static mock or deck)** | **PASS** | Real, runnable LiveKit Agent worker (`python -m agent.session dev`), browser WebRTC connection via Playground, interactive Visual HUD ([`client/index.html`](client/index.html)), and 66 passing automated tests. |
+| **3. Working product path (not a static mock or deck)** | **PASS** | Real, runnable LiveKit Agent worker (`python -m agent.session dev`), browser WebRTC connection via Playground, interactive Visual HUD ([`client/index.html`](client/index.html)), and 71 passing automated tests. |
 | **4. Required live demo provided** | **PASS** | LiveKit Cloud instance (`wss://rice-h02i5ol6.livekit.cloud`) with 30-day pre-generated judge token, interactive Visual HUD, and 4-minute demo recording blueprint ([`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md)). |
 | **5. No live credentials or secrets exposed** | **PASS** | Automated secret scan ([`preflight_check.py`](preflight_check.py)) verifies zero exposed keys. `.env` is gitignored; `.env.example` contains only sanitized placeholders; judge token is pre-signed with room-scoped permissions. |
 | **6. Model, voice, and language pass preflight** | **PASS** | Production model `coda`, speaker `astra`, language `eng`. Verified against Rime's live production catalog via [`preflight_check.py`](preflight_check.py) and [`eval/test_live_interrupted_turn_livekit.py`](eval/test_live_interrupted_turn_livekit.py). |
@@ -268,6 +268,21 @@ python-dotenv                                  # Environment variable loading fr
 pytest + pytest-asyncio                        # Test framework (dev dependency)
 ```
 
+### Application Responsibility Matrix ("Own the Rest of the Application")
+Per the hackathon rule (*"Rime provides text-to-speech. Your application remains responsible for user input, speech recognition, reasoning, orchestration, state, transport, tools, safety, and evaluation"*), RimeTrack strictly owns every layer of the voice system:
+
+| Architectural Responsibility | RimeTrack Implementation | Component File |
+|---|---|---|
+| **User Input & Audio Capture** | LiveKit WebRTC client stream capture + Silero VAD turn detection | [`agent/session.py`](agent/session.py) |
+| **Speech Recognition (STT)** | Deepgram `nova-3` with transparent fallback to OpenAI Whisper STT | [`agent/session.py:124-130`](agent/session.py) |
+| **Reasoning & Persona** | GPT-4o-mini with "Writing for the Ear" dispatch persona guidance | [`agent/prompts.py`](agent/prompts.py) |
+| **Orchestration & Authority** | Thread-safe monotonic GenerationFence gating all in-flight generation | [`agent/fence.py`](agent/fence.py) |
+| **Conversation State** | Real-time heard-text accounting ledger synced to Rime timestamps | [`agent/state_manager.py`](agent/state_manager.py) |
+| **Transport & Audio Mesh** | LiveKit WebRTC audio room + bidirectional WebSocket streaming | [`agent/session.py`](agent/session.py) |
+| **Tools & Async Fencing** | `ToolExecutor` with sub-ms cancellable abort & uncancellable quarantine | [`agent/tool_executor.py`](agent/tool_executor.py), [`agent/tools.py`](agent/tools.py) |
+| **Safety & Normalization** | Pre-TTS domain normalizer expanding codes, currency, and times | [`agent/text_normalize.py`](agent/text_normalize.py) |
+| **Empirical Evaluation** | 80-trial baseline benchmark, 5-dimension comparative study, 71 tests | [`eval/run_benchmark.py`](eval/run_benchmark.py), [`eval/tts_comparative_benchmark.py`](eval/tts_comparative_benchmark.py) |
+
 ### No Additional Infrastructure Required
 - **No database** — tool demonstrations use in-memory mock responses with deliberate delays
 - **No external queue** — all event routing is in-process via `asyncio`
@@ -285,7 +300,7 @@ pytest + pytest-asyncio                        # Test framework (dev dependency)
 | **GitHub Repository** | [https://github.com/saugata-malakar/KDAG-RIME](https://github.com/saugata-malakar/KDAG-RIME) |
 | **Branch** | `main` (all commits on default branch) |
 | **Language** | Python 3.11+ |
-| **Total Test Coverage** | 66/66 tests passing across 10 test files |
+| **Total Test Coverage** | 71/71 tests passing across 11 test files |
 | **Benchmark Data** | 160 trials (80 per system), raw CSV committed |
 | **TTS Comparative Study** | 4 providers across 5 dimensions, 10-item corpus |
 
@@ -306,6 +321,7 @@ Every behavior shown in the demo exists in the source code and can be reproduced
 
 | Demonstrated Behavior | Source File | Reproduction Command |
 |---|---|---|
+| **Shipped Path & Fallback Observability** (endpoint, region, format, model, disclosed fallbacks) | [`tests/stress/test_shipped_path.py`](tests/stress/test_shipped_path.py) | `pytest tests/stress/test_shipped_path.py -v` |
 | **Full-Duplex Rubric Proof** (fixed tool delay, barge-in, request change, audio cutoff, stale tool quarantine, grounded output) | [`tests/stress/test_full_duplex_proof.py`](tests/stress/test_full_duplex_proof.py) | `pytest tests/stress/test_full_duplex_proof.py -v` |
 | **Multi-Provider TTS Comparative Benchmark** (Rime vs. ElevenLabs vs. Cartesia vs. OpenAI across 5 dimensions) | [`eval/tts_comparative_benchmark.py`](eval/tts_comparative_benchmark.py) | `python -m eval.tts_comparative_benchmark` |
 | **TTS Comparative & Corpus Unit Suite** | [`tests/stress/test_tts_comparative.py`](tests/stress/test_tts_comparative.py) | `pytest tests/stress/test_tts_comparative.py -v` |
@@ -364,7 +380,7 @@ python preflight_check.py
 ```
 Validates all API keys, organizer-specified Rime configuration, and scans for accidentally committed secrets.
 
-### Step 4: Run the Full Test Suite (66/66 Passing)
+### Step 4: Run the Full Test Suite (71/71 Passing)
 ```bash
 pytest tests/ -v
 ```
@@ -458,7 +474,8 @@ python -m agent.session dev
 │   ├── test_live_interrupted_turn_livekit.py # Live WebSocket timestamp diagnostic
 │   ├── baselines/naive.py        # Unfenced baseline for comparison
 │   └── results/                  # Benchmark JSONs & trial CSVs
-├── tests/stress/                 # Unit & Stress Test Suite (66/66 Passing)
+├── tests/stress/                 # Unit & Stress Test Suite (71/71 Passing)
+│   ├── test_shipped_path.py      # Shipped path verification (endpoint, region, format, fallbacks)
 │   ├── test_tts_comparative.py   # Comparative TTS benchmark & corpus structure tests
 │   ├── test_full_duplex_proof.py # Full-duplex rubric integration proof (tool delay + barge-in + change)
 │   ├── test_fence.py             # GenerationFence thread-safety & eviction
@@ -484,7 +501,7 @@ python -m agent.session dev
 | **Problem & Necessity of Voice** | 25% | Hands-busy workflow where removing speech destroys usability; solves context poisoning and stale tool bleed. | [`README.md §1`](#-1-problem--necessity-of-voice-judging-weight-25), [`RIME_EVIDENCE.md §1`](RIME_EVIDENCE.md) |
 | **Hard Voice Engineering** | 25% | Monotonic GenerationFence, event-driven tool cancellation (<= 0.08ms), protocol-level WebSocket buffer clearing. | [`agent/fence.py`](agent/fence.py), [`agent/tool_executor.py`](agent/tool_executor.py), [`docs/ARCHITECTURE_REPORT.md`](docs/ARCHITECTURE_REPORT.md) |
 | **Rime Integration & Experience** | 20% | Primary spoken output over WebSocket using `coda`/`astra`; per-word timestamp alignment; Writing for the Ear prompt engineering. | [`agent/session.py`](agent/session.py), [`agent/rime_ws_client.py`](agent/rime_ws_client.py), [`docs/PROSODY_ANALYSIS.md`](docs/PROSODY_ANALYSIS.md) |
-| **Evidence & Reproducibility** | 20% | 80-trial empirical benchmark (0.0% stale rate); 66 passing tests; raw trial CSVs; multi-provider comparative study; live diagnostic script; preflight checker. | [`eval/results/benchmark_summary.json`](eval/results/benchmark_summary.json), [`docs/TTS_COMPARATIVE_STUDY.md`](docs/TTS_COMPARATIVE_STUDY.md), [`preflight_check.py`](preflight_check.py) |
+| **Evidence & Reproducibility** | 20% | 80-trial empirical benchmark (0.0% stale rate); 71 passing tests; raw trial CSVs; multi-provider comparative study; live diagnostic script; preflight checker. | [`eval/results/benchmark_summary.json`](eval/results/benchmark_summary.json), [`docs/TTS_COMPARATIVE_STUDY.md`](docs/TTS_COMPARATIVE_STUDY.md), [`preflight_check.py`](preflight_check.py) |
 | **Demo Clarity** | 10% | LiveKit Agents Playground direct token access, 4-minute video recording blueprint, and interactive Visual HUD. | [`README.md §LIVE DEMO`](#-live-demo--judge-testing-instructions), [`demo/DEMO_GUIDE.md`](demo/DEMO_GUIDE.md), [`client/index.html`](client/index.html) |
 
 ---
